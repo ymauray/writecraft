@@ -61,18 +61,43 @@ git merge upstream/main     # ou: git rebase upstream/main
 git push origin main
 ```
 
-## Tester sans interface graphique
+## Où développer et tester
 
-La machine de développement n'a pas d'écran. Pistes :
+Le développement et les tests se font sur le Mac (avec interface graphique). Le serveur Ubuntu,
+sans écran, sert seulement à explorer le code.
 
-- les tests d'interface tournent sans écran (`crates/ui-egui/src/tests.rs`, egui_kittest) ;
-- `cargo run --release -p wordcraft-ui-egui --example ui_shot -- script.jsonl` fait des captures
-  d'écran de la fenêtre hors écran (à vérifier : un rendu logiciel sera peut-être nécessaire) ;
-- `cargo xtask ci` (fmt, clippy, tests, assets, couches, wasm) avant chaque commit.
+- `cargo xtask ci` (fmt, clippy, tests, i18n, doctests, assets, couches, wasm) avant chaque commit.
+- Prérequis : la cible `wasm32-unknown-unknown` (`rustup target add wasm32-unknown-unknown`) ;
+  `cargo-nextest` est recommandé (`cargo install cargo-nextest --locked`), sinon `xtask` se rabat
+  sur `cargo test`.
+- Sans écran, il reste les tests d'interface (`crates/ui-egui/src/tests.rs`, egui_kittest) et
+  `cargo run --release -p wordcraft-ui-egui --example ui_shot -- script.jsonl`, qui fait des
+  captures d'écran hors écran.
+
+## État de départ (CI sur le serveur Ubuntu, 2026-10-29, commit `11109377`)
+
+| Étape | Résultat |
+|---|---|
+| fmt | ✅ |
+| clippy | ✅ (environ 1 min 15 s) |
+| tests (nextest) | 4 558 réussis, 1 échoué, 5 ignorés sur 4 559 lancés (le premier échec a arrêté les 44 restants) ; une exécution complète prend 1 min 30 environ |
+| doctests, assets, layers | ✅ lors d'une exécution étape par étape |
+| i18n-report, wasm | pas lancés jusqu'au bout |
+
+Les échecs observés viennent du serveur, pas du code :
+
+- `backstage::tests::recovery_page_keeps_dismissed_copies_and_confirms_discard` : délai de 5 s
+  dépassé quand la machine est chargée ; passe 3 fois sur 3 lancé seul.
+- `wordcraft-zotero tests::cancelled_session_and_no_zotero` : le port du faux serveur Zotero était
+  aussi utilisé par un processus root de la machine.
+- Une mise à jour système qui remplace `/dev/null` par un fichier ordinaire casse la compilation
+  (`failed to run rustc to learn about target-specific information`) ; après correction, supprimer
+  `target/.rustc_info.json`.
+
+Il reste à confirmer une CI entièrement verte sur le Mac.
 
 ## Ce qui manque
 
 - Le dossier `plan/` (statut et plan d'exécution) est absent : exclu de git, il n'existe que sur la
   machine de l'auteur d'origine. `ROADMAP.md` et `docs/` le remplacent.
 - Pas encore lus : `docs/roadmap.md`, `docs/gaps.md`, `AGENTS.md`, le dépôt `craftrules`.
-- Pas encore lancé : une compilation complète et `cargo xtask ci`, pour connaître l'état de départ.
