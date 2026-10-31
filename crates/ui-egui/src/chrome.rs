@@ -602,6 +602,13 @@ pub fn status_bar(app: &mut WordApp, ui: &mut Ui) {
                     ui.set_min_width(200.0);
                     crate::ribbon::language_menu(ui, app);
                 });
+                // WriteCraft: the Pomodoro timer, right of the language; a click starts or pauses it.
+                if crate::writecraft::trimmed() {
+                    let (shown, tip) = crate::pomodoro::status_text();
+                    if st(ui, &shown).on_hover_text(tip).clicked() {
+                        let _ = app.run("ui.pomodoro.toggle", json!({}));
+                    }
+                }
                 if app.session.doc.settings.track_changes {
                     st(ui, tl!("Track Changes: On"));
                 }

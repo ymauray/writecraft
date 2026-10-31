@@ -31,7 +31,7 @@ pub fn apply_app_defaults(app: &mut crate::WordApp) {
 }
 
 /// WriteCraft's own interface text, in English and French: craft-i18n has no WriteCraft rows.
-const TEXTS: [(&str, &str); 6] = [
+const TEXTS: &[(&str, &str)] = &[
     ("About WriteCraft", "À propos de WriteCraft"),
     ("A distraction-free word processor for writers, written in Rust.", "Un traitement de texte épuré, pensé pour l'écriture, écrit en Rust."),
     (
@@ -44,6 +44,30 @@ const TEXTS: [(&str, &str); 6] = [
         "MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team, the WordCraft contributors and the WriteCraft contributors.",
         "MIT OU Apache-2.0. Copyright (c) 2026 l'équipe ArtCraft, les contributeurs de WordCraft et ceux de WriteCraft.",
     ),
+    // The Pomodoro tab and status.
+    ("Timer", "Minuteur"),
+    ("Durations", "Durées"),
+    ("Start", "Démarrer"),
+    ("Resume", "Reprendre"),
+    ("Reset", "Réinitialiser"),
+    ("Skip", "Passer"),
+    ("Stop", "Arrêter"),
+    ("Restart the current period", "Recommencer la période en cours"),
+    ("Go to the next period", "Passer à la période suivante"),
+    ("Stop and reset the cycle", "Arrêter et remettre le cycle à zéro"),
+    ("Short break (min)", "Pause courte (min)"),
+    ("Long break (min)", "Pause longue (min)"),
+    ("Long break after (pomodoros)", "Pause longue après (pomodoros)"),
+    ("Auto-start breaks", "Lancer les pauses automatiquement"),
+    ("Auto-start pomodoros", "Lancer les pomodoros automatiquement"),
+    ("Notify at the end", "Prévenir à la fin"),
+    ("Short break", "Pause courte"),
+    ("Long break", "Pause longue"),
+    ("Paused", "En pause"),
+    ("Click to start or pause the timer", "Cliquer pour démarrer ou mettre en pause le minuteur"),
+    ("Pomodoro finished: time for a break.", "Pomodoro terminé : c'est l'heure de la pause."),
+    ("Pomodoro finished: time for a long break.", "Pomodoro terminé : c'est l'heure de la pause longue."),
+    ("Break over: back to work.", "Pause terminée : au travail !"),
 ];
 
 /// `en` in the interface language: French when the interface is French, English otherwise.
@@ -73,6 +97,15 @@ pub(crate) fn about_ui(ui: &mut egui::Ui) {
             .small()
             .weak(),
     );
+}
+
+/// WriteCraft's own tabs: Pomodoro, before Help.
+pub(crate) fn add_tabs(tabs: &mut Vec<(String, bool)>) {
+    if !trimmed() || tabs.iter().any(|(n, _)| n == "Pomodoro") {
+        return;
+    }
+    let at = tabs.iter().position(|(n, _)| n == "Help").unwrap_or(tabs.len());
+    tabs.insert(at, ("Pomodoro".to_string(), false));
 }
 
 /// The built-in ribbon tabs left off the strip.
@@ -186,7 +219,7 @@ mod tests {
         for tab in HIDDEN_TABS {
             assert!(h.query_by_label(tl!(tab)).is_none(), "{tab} is gone");
         }
-        for tab in ["File", "Home", "Review", "View", "Help"] {
+        for tab in ["File", "Home", "Review", "View", "Pomodoro", "Help"] {
             assert!(h.query_by_label(tl!(tab)).is_some(), "{tab} stays");
         }
         let badges = crate::keytips::badge_tabs(h.state());

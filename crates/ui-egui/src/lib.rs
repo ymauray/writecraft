@@ -49,6 +49,7 @@ pub mod objects;
 pub mod options;
 pub mod panes;
 pub mod paste_picture;
+pub mod pomodoro;
 pub mod previews;
 pub mod print_page;
 pub mod printing;

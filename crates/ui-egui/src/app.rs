@@ -216,6 +216,7 @@ impl WordApp {
     /// Per-frame logic before layout: control requests, screenshots, shortcuts, file drops.
     pub fn logic(&mut self, ctx: &egui::Context) {
         updates_ui::tick(self, ctx);
+        crate::pomodoro::tick(self, ctx);
         let lang = i18n::Lang::from_pref(&self.ui.language);
         i18n::set_current(lang);
         // New documents are written in the interface's language when WordCraft can proof it

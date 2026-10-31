@@ -484,6 +484,10 @@ impl WordApp {
     /// Commands that live in the UI layer.
     pub(crate) fn ui_command(&mut self, id: &str, p: &Value) -> Option<Result<Value, String>> {
         let s = |k: &str| p.get(k).and_then(Value::as_str);
+        // WriteCraft: the Pomodoro timer.
+        if id.starts_with("ui.pomodoro.") {
+            return Some(crate::pomodoro::command(id, p));
+        }
         Some(Ok(match id {
             "ui.checkForUpdates" | "help.checkForUpdates" => {
                 crate::updates_ui::check(self);

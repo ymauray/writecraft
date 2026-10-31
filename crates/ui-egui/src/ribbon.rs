@@ -117,6 +117,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
             tabs.push((ct.to_string(), false));
         }
     }
+    crate::writecraft::add_tabs(&mut tabs);
     {
         let names: Vec<&str> = tabs.iter().map(|(n, _)| n.as_str()).collect();
         let next = resolve_tab(&app.ui.tab, &names);
@@ -335,6 +336,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                         "Developer" => developer(app, ui),
                         "Zotero" => zotero(app, ui),
                         "Help" => help(app, ui),
+                        "Pomodoro" => crate::pomodoro::ribbon(app, ui),
                         "Table Design" => table_design(app, ui),
                         "Table Layout" => table_layout(app, ui),
                         "Equation" if app.session.math.is_some() => crate::equation_tab::show(app, ui),

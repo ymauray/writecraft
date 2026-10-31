@@ -474,6 +474,11 @@ fn main() -> eframe::Result {
             wordcraft_ui_egui::writecraft::set_trimmed(true);
             load_prefs(&mut app);
             wordcraft_ui_egui::writecraft::apply_app_defaults(&mut app);
+            if prefs_enabled()
+                && let Some(dir) = wordcraft_control_key::settings_dir()
+            {
+                wordcraft_ui_egui::pomodoro::use_settings_file(dir.join("pomodoro.json"));
+            }
             load_user_dictionary(&mut app);
             // A region chosen in File › Options replaces the system's for the first blank
             // document too (#838).
