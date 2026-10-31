@@ -1,6 +1,13 @@
 use super::common::{mi, mi_text, stack};
 use super::underline::underline_menu;
-use super::{Remember, Stroke, Target, Tokens, Ui, Value, WordApp, big, group, json, menu_button, small, split, vec2};
+use super::{Remember, Stroke, Target, Tokens, Ui, Value, WordApp, big, json, menu_button, small, split, vec2};
+
+/// [`super::group`], minus the groups WriteCraft leaves off Home.
+fn group(ui: &mut Ui, title: &str, launcher: Option<&str>, app: &mut WordApp, add: impl FnOnce(&mut Ui, &mut WordApp)) {
+    if !crate::writecraft::hides_home_group(title) {
+        super::group(ui, title, launcher, app, add);
+    }
+}
 
 /// The Format Painter button. A click arms it for one use (blue border only); a double-click keeps
 /// it on across several uses (full checked look), like Word. Esc or another click turns it off.

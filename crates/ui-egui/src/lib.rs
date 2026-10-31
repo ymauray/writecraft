@@ -70,6 +70,7 @@ pub mod window_geometry;
 mod window_ui;
 mod windows;
 pub mod wordart_menus;
+pub mod writecraft;
 pub mod zotero;
 
 use serde::{Deserialize, Serialize};

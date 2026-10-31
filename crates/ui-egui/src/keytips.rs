@@ -191,6 +191,16 @@ struct Control {
 
 /// A tab's controls in the order they are drawn; mirrors `ribbon.rs`, so badges land in order.
 fn controls(tab: &str) -> Vec<Control> {
+    let mut all = all_controls(tab);
+    // WriteCraft: no KeyTips for the Home groups it leaves off the ribbon.
+    if tab == "Home" && crate::writecraft::trimmed() {
+        all.retain(|c| crate::writecraft::HOME_KEYTIPS.contains(&c.tip));
+    }
+    all
+}
+
+/// WordCraft's controls for a tab, before WriteCraft's trims.
+fn all_controls(tab: &str) -> Vec<Control> {
     let c = |tip: &'static str, id: &'static str| Control { tip, target: Target::Cmd { id, params: serde_json::json!({}) } };
     let m = c;
     let d = |tip: &'static str, name: &'static str| Control { tip, target: Target::Dialog { name } };
