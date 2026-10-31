@@ -21,17 +21,18 @@ cargo test --workspace --doc
 
 ## Résultat
 
-| Étape | Actuel (`5808ce8a`) | Départ (`69e5ec0b`) |
+| Étape | Actuel (`5e0c4fe6`) | Départ (`69e5ec0b`) |
 |---|---|---|
-| Tests (nextest, `--no-fail-fast`) | 4597 lancés : **4595 réussis, 2 échoués, 5 ignorés** (71 s) | 4590 lancés : 4588 réussis, 2 échoués, 5 ignorés |
+| Tests (nextest, `--no-fail-fast`) | 4612 lancés : **4610 réussis, 2 échoués, 5 ignorés** (environ 3 min avec l'audit) | 4590 lancés : 4588 réussis, 2 échoués, 5 ignorés |
 | Audit i18n (`i18n-report`) | ✅ réussi ; voir « Traduction française » | ✅ réussi |
 | Doctests | ✅ aucun échec | ✅ aucun échec |
 | fmt, clippy (`--workspace --all-targets -D warnings`) | ✅ | pas relancés |
 | assets, layers | ✅ (57 fichiers attribués ; 20 crates, aucune violation) | pas relancés |
 | wasm | non suivi : pas de version web pour WriteCraft | pas relancé |
 
-Les 7 tests en plus sont les tests WriteCraft (`crates/engine/src/writecraft.rs`,
-`crates/ui-egui/src/writecraft.rs`). Trois tests de WordCraft ont été adaptés aux boutons
+Les 22 tests en plus sont les tests WriteCraft (`crates/engine/src/writecraft.rs`,
+`crates/ui-egui/src/writecraft.rs`, `crates/ui-egui/src/pomodoro.rs`, `pomodoro/sound.rs`,
+`word_tally.rs`). L'audit des traductions passe aussi. Trois tests de WordCraft ont été adaptés aux boutons
 supprimés pour tout le monde (Partager, Discord) : `ribbon::tests::tab_strip_never_overlaps_the_right_buttons`,
 `ribbon::tests::the_tab_strip_buttons_have_names`, `tests::the_default_app_button_shows_only_with_the_hosts_hook`.
 

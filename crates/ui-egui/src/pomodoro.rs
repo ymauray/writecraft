@@ -131,7 +131,17 @@ impl Timer {
     pub fn new(settings: Settings) -> Self {
         let settings = settings.clamped();
         let remaining_ms = settings.total_ms(Phase::Work);
-        Timer { settings, phase: Phase::Work, completed: 0, running: false, remaining_ms, deadline_ms: 0.0, started: false, cues: Vec::new(), work_sessions: 0 }
+        Timer {
+            settings,
+            phase: Phase::Work,
+            completed: 0,
+            running: false,
+            remaining_ms,
+            deadline_ms: 0.0,
+            started: false,
+            cues: Vec::new(),
+            work_sessions: 0,
+        }
     }
 
     pub fn total_ms(&self) -> f64 {

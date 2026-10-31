@@ -223,8 +223,8 @@ fn output(samples: Vec<f32>) {
 #[cfg(all(not(test), not(target_arch = "wasm32")))]
 fn open_sink() -> Result<rodio::MixerDeviceSink, rodio::DeviceSinkError> {
     for frames in [1024, 512] {
-        let sink = rodio::DeviceSinkBuilder::from_default_device()
-            .and_then(|b| b.with_buffer_size(rodio::cpal::BufferSize::Fixed(frames)).open_stream());
+        let sink =
+            rodio::DeviceSinkBuilder::from_default_device().and_then(|b| b.with_buffer_size(rodio::cpal::BufferSize::Fixed(frames)).open_stream());
         if sink.is_ok() {
             return sink;
         }
