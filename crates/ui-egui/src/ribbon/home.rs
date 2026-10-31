@@ -2,9 +2,10 @@ use super::common::{mi, mi_text, stack};
 use super::underline::underline_menu;
 use super::{Remember, Stroke, Target, Tokens, Ui, Value, WordApp, big, json, menu_button, small, split, vec2};
 
-/// [`super::group`], minus the groups WriteCraft leaves off Home.
+/// [`super::group`], minus the groups and launchers WriteCraft leaves off Home.
 fn group(ui: &mut Ui, title: &str, launcher: Option<&str>, app: &mut WordApp, add: impl FnOnce(&mut Ui, &mut WordApp)) {
     if !crate::writecraft::hides_home_group(title) {
+        let launcher = if crate::writecraft::hides_launcher(title) { None } else { launcher };
         super::group(ui, title, launcher, app, add);
     }
 }

@@ -1,5 +1,6 @@
 //! WriteCraft's defaults for new blank documents: French text, Normal and Heading 1 set for
-//! writing (Georgia, justified body, first-line indents, 1.5 line spacing), an Ellipse style for
+//! writing (Georgia, justified body, first-line indents, 1.5 line spacing), a centred Georgia
+//! Title, an Ellipse style for
 //! scene breaks, and a Styles gallery of Normal, Title, Heading 1 and Ellipse only.
 //!
 //! The apps turn them on ([`crate::Session::writecraft_defaults`]); a session without them (the
@@ -43,6 +44,16 @@ pub fn apply_defaults(doc: &mut Document) {
         h1.para.space_before = Some(24.0);
         h1.para.space_after = Some(12.0);
         h1.para.line_spacing = Some(LineSpacing::Multiple(1.5));
+    }
+    if let Some(title) = styles.get_mut("Title") {
+        title.chr.font = Some(FONT.into());
+        title.chr.size = Some(22.0);
+        title.chr.color = None;
+        title.para.align = Some(Align::Center);
+        title.para.indent_first = Some(0.0);
+        title.para.line_spacing = Some(LineSpacing::Multiple(1.0));
+        title.para.space_before = Some(26.0);
+        title.para.space_after = Some(26.0);
     }
     // Ellipse: a centred scene break, as Normal but without the indent, 12 pt around, single spacing.
     styles.upsert(Style {
@@ -95,6 +106,13 @@ mod tests {
         assert_eq!((h1.chr.font.as_deref(), h1.chr.bold, h1.chr.size, h1.chr.color), (Some(FONT), Some(true), Some(20.0), None));
         assert_eq!((h1.para.align, h1.para.space_before, h1.para.space_after), (Some(Align::Left), Some(24.0), Some(12.0)));
         assert_eq!(h1.para.line_spacing, Some(LineSpacing::Multiple(1.5)));
+        let title = s.doc.styles.get("Title").unwrap();
+        assert_eq!((title.chr.font.as_deref(), title.chr.size, title.chr.color), (Some(FONT), Some(22.0), None));
+        assert_eq!(
+            (title.para.align, title.para.indent_first, title.para.line_spacing),
+            (Some(Align::Center), Some(0.0), Some(LineSpacing::Multiple(1.0)))
+        );
+        assert_eq!((title.para.space_before, title.para.space_after), (Some(26.0), Some(26.0)));
         let ellipse = s.doc.styles.get("Ellipse").unwrap();
         assert_eq!((ellipse.based_on.as_deref(), ellipse.para.align, ellipse.para.indent_first), (Some("Normal"), Some(Align::Center), Some(0.0)));
         assert_eq!((ellipse.para.space_before, ellipse.para.space_after), (Some(12.0), Some(12.0)));

@@ -45,6 +45,19 @@ pub(crate) fn trim_tabs(tabs: &mut [wordcraft_engine::ribbon::TabEntry]) {
     }
 }
 
+/// Ribbon commands whose buttons and KeyTips are left out (spell checking is off).
+pub const HIDDEN_COMMANDS: [&str; 1] = ["review.spelling"];
+
+/// Whether the ribbon leaves out the button that runs `id`.
+pub(crate) fn hides_command(id: &str) -> bool {
+    trimmed() && HIDDEN_COMMANDS.contains(&id)
+}
+
+/// Whether the group titled `title` loses its dialog launcher (Styles: no styles pane).
+pub(crate) fn hides_launcher(title: &str) -> bool {
+    trimmed() && title == "Styles"
+}
+
 /// The Home groups left off the ribbon.
 pub const HIDDEN_HOME_GROUPS: [&str; 4] = ["Font", "Paragraph", "Voice", "Editor"];
 
@@ -122,6 +135,20 @@ mod tests {
         assert!(app.session.view.proofing, "WordCraft checks spelling");
         apply_app_defaults(&mut app);
         assert!(!app.session.view.proofing && !app.session.prefs.check_spelling && !app.ui.check_spelling);
+    }
+
+    #[test]
+    fn no_spelling_button_and_no_styles_launcher() {
+        set_trimmed(true);
+        let tips: Vec<&str> = crate::keytips::controls_public("Review").into_iter().map(|c| c.tip).collect();
+        assert!(!tips.contains(&"Spelling & Grammar") && tips.contains(&"Thesaurus"), "{tips:?}");
+        assert!(hides_command("review.spelling") && hides_launcher("Styles") && !hides_launcher("Clipboard"));
+        let mut h = home_harness();
+        h.state_mut().run("ui.tab", serde_json::json!({"tab": "Review"})).unwrap();
+        h.run_steps(4);
+        assert!(h.query_by_label(tl!("Thesaurus")).is_some(), "the rest of Proofing stays");
+        set_trimmed(false);
+        assert!(!hides_command("review.spelling") && !hides_launcher("Styles"));
     }
 
     #[test]

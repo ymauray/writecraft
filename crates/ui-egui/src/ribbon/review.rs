@@ -1,6 +1,11 @@
 use super::common::{mi, stack};
 use super::language::language_menu;
-use super::{Ui, WordApp, big, big_toggle, group, json, menu_button, small};
+use super::{Ui, Value, WordApp, big_toggle, group, json, menu_button, small};
+
+/// [`super::big`], minus the buttons WriteCraft leaves out (Spelling & Grammar).
+fn big(ui: &mut Ui, app: &mut WordApp, icon: &str, label: &str, id: &str, params: Value, menu: bool) -> Option<egui::Response> {
+    (!crate::writecraft::hides_command(id)).then(|| super::big(ui, app, icon, label, id, params, menu))
+}
 
 pub(super) fn review(app: &mut WordApp, ui: &mut Ui) {
     group(ui, "Proofing", None, app, |ui, app| {

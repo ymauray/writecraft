@@ -196,6 +196,7 @@ fn controls(tab: &str) -> Vec<Control> {
     if tab == "Home" && crate::writecraft::trimmed() {
         all.retain(|c| crate::writecraft::HOME_KEYTIPS.contains(&c.tip));
     }
+    all.retain(|c| !matches!(c.target, Target::Cmd { id, .. } if crate::writecraft::hides_command(id)));
     all
 }
 
