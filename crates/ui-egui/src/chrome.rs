@@ -619,7 +619,8 @@ pub fn status_bar(app: &mut WordApp, ui: &mut Ui) {
                 // out first, so the message can be shortened to the space they leave (#2402): a
                 // long one (the path of a file that isn't there) must not be drawn over the
                 // Focus and view buttons.
-                let msg_at = ui.cursor().min;
+                // Centred on the row like the other items: the cursor's top isn't the row's.
+                let msg_at = pos2(ui.cursor().min.x, ui.max_rect().center().y - TypeRung::Caption.line_height() / 2.0);
                 let mut controls_left = f32::INFINITY;
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     ui.spacing_mut().item_spacing = vec2(4.0, 0.0);
