@@ -1082,6 +1082,7 @@ fn about_dialog(ui: &mut Ui, d: &mut Dialog) -> bool {
     match *tab {
         1 => crate::credits::contributors_ui(ui),
         2 => crate::credits::models_ui(ui),
+        _ if crate::writecraft::trimmed() => crate::writecraft::about_ui(ui),
         _ => {
             ui.label(egui::RichText::new(tl!("WordCraft")).font(semibold(22.0)));
             let build = option_env!("WORDCRAFT_BUILD_SHA").map(|s| s.get(..8).unwrap_or(s)).unwrap_or(tl!("development build"));

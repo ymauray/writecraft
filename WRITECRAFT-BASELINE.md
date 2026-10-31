@@ -28,7 +28,7 @@ cargo test --workspace --doc
 | Doctests | ✅ aucun échec | ✅ aucun échec |
 | fmt, clippy (`--workspace --all-targets -D warnings`) | ✅ | pas relancés |
 | assets, layers | ✅ (57 fichiers attribués ; 20 crates, aucune violation) | pas relancés |
-| wasm | ⚠️ pas vérifiable : la cible `wasm32-unknown-unknown` manque (Rust de Homebrew, sans `rustup`) | pas relancé |
+| wasm | non suivi : pas de version web pour WriteCraft | pas relancé |
 
 Les 7 tests en plus sont les tests WriteCraft (`crates/engine/src/writecraft.rs`,
 `crates/ui-egui/src/writecraft.rs`). Trois tests de WordCraft ont été adaptés aux boutons

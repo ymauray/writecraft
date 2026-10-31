@@ -30,6 +30,51 @@ pub fn apply_app_defaults(app: &mut crate::WordApp) {
     app.ui.check_spelling = false;
 }
 
+/// WriteCraft's own interface text, in English and French: craft-i18n has no WriteCraft rows.
+const TEXTS: [(&str, &str); 6] = [
+    ("About WriteCraft", "À propos de WriteCraft"),
+    ("A distraction-free word processor for writers, written in Rust.", "Un traitement de texte épuré, pensé pour l'écriture, écrit en Rust."),
+    (
+        "Based on WordCraft, by the ArtCraft team and the WordCraft contributors.",
+        "Basé sur WordCraft, de l'équipe ArtCraft et des contributeurs de WordCraft.",
+    ),
+    ("WriteCraft source code: github.com/ymauray/writecraft", "Code source de WriteCraft : github.com/ymauray/writecraft"),
+    ("WordCraft source code: github.com/storytold/wordcraft", "Code source de WordCraft : github.com/storytold/wordcraft"),
+    (
+        "MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team, the WordCraft contributors and the WriteCraft contributors.",
+        "MIT OU Apache-2.0. Copyright (c) 2026 l'équipe ArtCraft, les contributeurs de WordCraft et ceux de WriteCraft.",
+    ),
+];
+
+/// `en` in the interface language: French when the interface is French, English otherwise.
+pub(crate) fn text(en: &'static str) -> &'static str {
+    if crate::i18n::current().code().starts_with("fr") { TEXTS.iter().find(|(e, _)| *e == en).map_or(en, |(_, fr)| *fr) } else { en }
+}
+
+/// A dialog's window title: WriteCraft's About title with the trims on, else the translated one.
+pub(crate) fn dialog_title(title: &'static str) -> &'static str {
+    if trimmed() && title == "About WordCraft" { text("About WriteCraft") } else { tl!(title) }
+}
+
+/// The About tab of the About dialog, for WriteCraft. The Contributors and Models tabs stay
+/// WordCraft's: WriteCraft is built on their work.
+pub(crate) fn about_ui(ui: &mut egui::Ui) {
+    ui.label(egui::RichText::new("WriteCraft").font(crate::theme::semibold(22.0)));
+    let build = option_env!("WORDCRAFT_BUILD_SHA").map(|s| s.get(..8).unwrap_or(s)).unwrap_or(tl!("development build"));
+    ui.label(crate::i18n::fmt(tl!("Version {version} ({build})"), &[("version", env!("CARGO_PKG_VERSION")), ("build", build)]));
+    ui.label(text("A distraction-free word processor for writers, written in Rust."));
+    ui.label(text("Based on WordCraft, by the ArtCraft team and the WordCraft contributors."));
+    ui.add_space(6.0);
+    ui.hyperlink_to(text("WriteCraft source code: github.com/ymauray/writecraft"), "https://github.com/ymauray/writecraft");
+    ui.hyperlink_to(text("WordCraft source code: github.com/storytold/wordcraft"), "https://github.com/storytold/wordcraft");
+    ui.add_space(6.0);
+    ui.label(
+        egui::RichText::new(text("MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team, the WordCraft contributors and the WriteCraft contributors."))
+            .small()
+            .weak(),
+    );
+}
+
 /// The built-in ribbon tabs left off the strip.
 pub const HIDDEN_TABS: [&str; 8] = ["Insert", "Draw", "Design", "Layout", "References", "Mailings", "Developer", "Zotero"];
 
@@ -173,6 +218,23 @@ mod tests {
         assert!(h.query_by_label(tl!("Word Count")).is_some(), "the rest of Proofing stays");
         set_trimmed(false);
         assert!(!hides_command("review.spelling") && !hides_launcher("Styles"));
+    }
+
+    #[test]
+    fn the_about_dialog_names_writecraft() {
+        set_trimmed(true);
+        let mut h = home_harness();
+        h.state_mut().run("ui.dialog", serde_json::json!({"name": "about"})).unwrap();
+        h.run_steps(4);
+        assert!(h.query_by_label("WriteCraft").is_some());
+        assert!(h.query_by_label(text("WriteCraft source code: github.com/ymauray/writecraft")).is_some());
+        assert!(h.query_by_label(tl!("Join us on Discord: discord.gg/artcraft")).is_none());
+        assert_eq!(dialog_title("About WordCraft"), "About WriteCraft");
+        assert_eq!(dialog_title("Word Count"), tl!("Word Count"));
+        set_trimmed(false);
+        assert_eq!(dialog_title("About WordCraft"), tl!("About WordCraft"));
+        // Every WriteCraft text has a French version.
+        assert!(TEXTS.iter().all(|(en, fr)| !fr.is_empty() && en != fr));
     }
 
     #[test]

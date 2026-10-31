@@ -30,11 +30,10 @@ commandes, et sont regroupées dans deux fichiers propres à WriteCraft :
 
 - **`crates/ui-egui/src/writecraft.rs`** : les simplifications de l'interface, derrière un
   interrupteur (`writecraft::set_trimmed(true)`) que l'application de bureau
-  (`apps/wordcraft/src/main.rs`) et l'application web (`apps/wordcraft-web/src/web.rs`) activent au
-  démarrage. Il contient les listes d'onglets, de blocs et de commandes masqués, et
+  (`apps/wordcraft/src/main.rs`) active au démarrage. Il contient les listes d'onglets, de blocs et de commandes masqués, et
   `apply_app_defaults` (correcteur désactivé).
 - **`crates/engine/src/writecraft.rs`** : les valeurs par défaut des nouveaux documents
-  (`apply_defaults`), activées par `Session::writecraft_defaults`, que les deux applications activent
+  (`apply_defaults`), activées par `Session::writecraft_defaults`, que l'application de bureau active
   aussi.
 - Sans ces interrupteurs (tests hérités de WordCraft, exemples, ligne de commande, MCP), on garde le
   comportement de WordCraft. Les tests de WordCraft restent donc tels quels, et les tests WriteCraft
@@ -54,6 +53,7 @@ commandes, et sont regroupées dans deux fichiers propres à WriteCraft :
 | Accueil | Presse-papiers ; Police réduite à Gras, Italique, Souligné ; Styles sans bouton de volet ; Modification. Masqués : Paragraphe, Voix, Éditeur. |
 | Révision | Plus de Grammaire et orthographe, de Thésaurus ni de bloc Langue (Traduire, Langue). |
 | Correcteur | Désactivé au démarrage (les outils de correction n'ont pas le français), même si une préférence enregistrée l'activait. |
+| À propos | Parle de WriteCraft (titre, description, code source de WriteCraft et de WordCraft, licence). Textes en anglais et en français dans `writecraft.rs` (`text`), car craft-i18n n'a pas de lignes WriteCraft. Les onglets Contributeurs et Modèles restent ceux de WordCraft. |
 | Nouveaux documents | Texte en français (`fr-FR`). Galerie de styles : Normal, Titre 1, Titre, Ellipse. |
 
 Styles des nouveaux documents (les documents existants gardent les leurs) :
@@ -67,6 +67,10 @@ Styles des nouveaux documents (les documents existants gardent les leurs) :
 
 Georgia est une police système de macOS et Windows ; sous Linux, une police serif libre la
 remplace. Elle n'est pas intégrée au dépôt.
+
+**Pas de version web.** WriteCraft ne vise que l'application de bureau : l'application web
+(`apps/wordcraft-web`) reste celle de WordCraft, sans les simplifications. La vérification
+`cargo xtask wasm` n'est pas suivie.
 
 ### Façon de travailler
 
@@ -162,8 +166,6 @@ vérification wasm ne peut pas tourner sans `rustup` : voir `WRITECRAFT-BASELINE
 
 ## Ce qui manque
 
-- La vérification wasm (`cargo xtask wasm`) : la cible `wasm32-unknown-unknown` n'est pas installée
-  (Rust de Homebrew, sans `rustup`).
 - Les documents de progression de WordCraft (`ROADMAP.md`, `docs/`) ne décrivent pas les
   modifications WriteCraft ; elles sont suivies ici.
 - Le dossier `plan/` (statut et plan d'exécution) est absent : exclu de git, il n'existe que sur la
