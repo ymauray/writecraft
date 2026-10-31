@@ -15,6 +15,9 @@ use serde_json::{Value, json};
 use crate::WordApp;
 use crate::writecraft::text;
 
+pub mod sound;
+use sound::{Cue, Theme};
+
 /// The longest period a setting accepts, in minutes.
 pub const MAX_MINUTES: u32 = 180;
 /// The most pomodoros before a long break.
@@ -52,6 +55,10 @@ pub struct Settings {
     pub auto_start_pomodoros: bool,
     /// Ask for attention (the Dock icon bounces) and say so on the status line when a period ends.
     pub notify: bool,
+    /// The sounds at the start of a pomodoro or a break and at the end of a period.
+    pub sounds: Theme,
+    /// Their volume, 0–100 %.
+    pub volume: u32,
 }
 
 impl Default for Settings {
@@ -64,6 +71,8 @@ impl Default for Settings {
             auto_start_breaks: false,
             auto_start_pomodoros: false,
             notify: true,
+            sounds: Theme::Beeps,
+            volume: 70,
         }
     }
 }
@@ -75,6 +84,7 @@ impl Settings {
         self.short_break_minutes = self.short_break_minutes.clamp(1, MAX_MINUTES);
         self.long_break_minutes = self.long_break_minutes.clamp(1, MAX_MINUTES);
         self.long_break_every = self.long_break_every.clamp(1, MAX_LONG_EVERY);
+        self.volume = self.volume.min(100);
         self
     }
 
@@ -105,6 +115,8 @@ pub struct Timer {
     deadline_ms: f64,
     /// Started at least once since the last stop.
     pub started: bool,
+    /// Sounds to play for what just happened (taken by `take_cues`).
+    cues: Vec<Cue>,
 }
 
 impl Default for Timer {
@@ -117,7 +129,7 @@ impl Timer {
     pub fn new(settings: Settings) -> Self {
         let settings = settings.clamped();
         let remaining_ms = settings.total_ms(Phase::Work);
-        Timer { settings, phase: Phase::Work, completed: 0, running: false, remaining_ms, deadline_ms: 0.0, started: false }
+        Timer { settings, phase: Phase::Work, completed: 0, running: false, remaining_ms, deadline_ms: 0.0, started: false, cues: Vec::new() }
     }
 
     pub fn total_ms(&self) -> f64 {
@@ -141,6 +153,10 @@ impl Timer {
 
     pub fn start(&mut self, now: f64) {
         if !self.running {
+            // A period starting from the top (not resumed after a pause) is announced.
+            if self.remaining_ms >= self.total_ms() {
+                self.cues.push(if self.phase == Phase::Work { Cue::WorkStart } else { Cue::BreakStart });
+            }
             self.deadline_ms = now + self.remaining_ms;
             self.running = true;
             self.started = true;
@@ -185,6 +201,7 @@ impl Timer {
             return None;
         }
         let ended = self.phase;
+        self.cues.push(Cue::End);
         let next = if ended == Phase::Work {
             self.completed = self.completed.saturating_add(1);
             if self.completed.is_multiple_of(self.settings.long_break_every) { Phase::LongBreak } else { Phase::ShortBreak }
@@ -203,6 +220,11 @@ impl Timer {
         if running {
             self.start(now);
         }
+    }
+
+    /// The sounds due since the last call, in order.
+    pub fn take_cues(&mut self) -> Vec<Cue> {
+        std::mem::take(&mut self.cues)
     }
 
     /// New settings. A period that hasn't begun takes its new length.
@@ -305,6 +327,13 @@ fn set(t: &mut Timer, p: &Value) -> Result<(), String> {
     if let Some(b) = flag(p, "notify")? {
         s.notify = b;
     }
+    if let Some(v) = p.get("sounds") {
+        s.sounds = v.as_str().and_then(Theme::from_id).ok_or("sounds must be \"off\", \"beeps\" or \"fun\"")?;
+    }
+    if let Some(v) = p.get("volume") {
+        let n = v.as_f64().filter(|n| n.is_finite() && n.fract() == 0.0 && (0.0..=100.0).contains(n));
+        s.volume = n.map(|n| n as u32).ok_or("volume must be a whole number from 0 to 100")?;
+    }
     t.set_settings(s);
     save_settings(&t.settings);
     Ok(())
@@ -313,10 +342,12 @@ fn set(t: &mut Timer, p: &Value) -> Result<(), String> {
 /// Runs a `ui.pomodoro.*` command: `start`, `pause`, `toggle`, `reset` (restart the period),
 /// `skip` (next period), `stop` (back to the first pomodoro), `set` (settings: `workMinutes`,
 /// `shortBreakMinutes`, `longBreakMinutes`, `longBreakEvery`, `autoStartBreaks`,
-/// `autoStartPomodoros`, `notify`) and `state`. Each returns the timer's state.
+/// `autoStartPomodoros`, `notify`, `sounds`: `off`/`beeps`/`fun`, `volume`: 0–100), `preview`
+/// (play the sounds: `cue` = `workStart`, `breakStart` or `end`, or all three) and `state`. Each
+/// returns the timer's state.
 pub fn command(id: &str, p: &Value) -> Result<Value, String> {
     let now = now();
-    with(|t| {
+    let (state, cues, settings) = with(|t| {
         match id.strip_prefix("ui.pomodoro.").unwrap_or("") {
             "start" => t.start(now),
             "pause" => t.pause(now),
@@ -325,20 +356,37 @@ pub fn command(id: &str, p: &Value) -> Result<Value, String> {
             "skip" => t.skip(now),
             "stop" => t.stop(),
             "set" => set(t, p)?,
+            "preview" => {
+                let cue = match p.get("cue") {
+                    None => None,
+                    Some(v) => Some(v.as_str().unwrap_or("")),
+                };
+                let cues: &[Cue] = match cue {
+                    None => &[Cue::WorkStart, Cue::BreakStart, Cue::End],
+                    Some("workStart") => &[Cue::WorkStart],
+                    Some("breakStart") => &[Cue::BreakStart],
+                    Some("end") => &[Cue::End],
+                    Some(_) => return Err("cue must be \"workStart\", \"breakStart\" or \"end\"".into()),
+                };
+                t.cues.extend_from_slice(cues);
+            }
             "state" => {}
             other => return Err(format!("unknown command `ui.pomodoro.{other}`")),
         }
-        Ok(t.state(now))
-    })
+        Ok::<_, String>((t.state(now), t.take_cues(), t.settings.clone()))
+    })?;
+    sound::play(settings.sounds, settings.volume, &cues);
+    Ok(state)
 }
 
 /// Per frame: ends a period whose time is up, says so, and keeps the display moving.
 pub fn tick(app: &mut WordApp, ctx: &egui::Context) {
     let now = now();
-    let (ended, running, notify, next) = with(|t| {
+    let (ended, running, notify, next, cues, settings) = with(|t| {
         let ended = t.tick(now);
-        (ended, t.running, t.settings.notify, t.phase)
+        (ended, t.running, t.settings.notify, t.phase, t.take_cues(), t.settings.clone())
     });
+    sound::play(settings.sounds, settings.volume, &cues);
     if let Some(ended) = ended
         && notify
     {
@@ -461,6 +509,37 @@ pub(crate) fn ribbon(app: &mut WordApp, ui: &mut Ui) {
             }
         });
     });
+    crate::widgets::group_titled(ui, "Pomodoro sounds", text("Sounds"), None, app, |ui, app| {
+        ui.vertical(|ui| {
+            ui.spacing_mut().item_spacing = egui::vec2(1.0, 4.0);
+            let labels = [text("Sounds"), text("Volume (%)")];
+            let label_w = labels
+                .iter()
+                .map(|l| ui.ctx().fonts_mut(|f| f.layout_no_wrap(l.to_string(), crate::theme::regular(12.0), egui::Color32::BLACK).size().x))
+                .fold(0.0_f32, f32::max)
+                + 8.0;
+            crate::widgets::row(ui, |ui| {
+                let (r, _) = ui.allocate_exact_size(egui::vec2(label_w, 20.0), egui::Sense::hover());
+                let t = crate::theme::Tokens::get(ui.ctx());
+                ui.painter().text(egui::pos2(r.min.x, r.center().y), egui::Align2::LEFT_CENTER, labels[0], crate::theme::regular(12.0), t.text);
+                let names: Vec<String> = Theme::ALL.iter().map(|t| text(t.label()).to_string()).collect();
+                let current = text(settings.sounds.label());
+                if let Some(v) = crate::widgets::combo_hint(ui, "pomodoroSounds", 90.0, current, &names, None, labels[0])
+                    && let Some(theme) = Theme::ALL.into_iter().find(|t| text(t.label()) == v.trim())
+                {
+                    let _ = app.run("ui.pomodoro.set", json!({ "sounds": theme.id() }));
+                    let _ = app.run("ui.pomodoro.preview", json!({ "cue": "workStart" }));
+                }
+            });
+            if let Some(n) = number_box(ui, "volume", labels[1], label_w, settings.volume, &[10, 25, 40, 55, 70, 85, 100])
+                && let Err(e) = app.run("ui.pomodoro.set", json!({ "volume": n.min(100) }))
+            {
+                app.status(e);
+            }
+            let b = crate::widgets::ButtonAction::new("ui.pomodoro.preview", json!({}), false);
+            crate::widgets::small(ui, app, "readAloud", Some(text("Listen")), text("Play the start, break and end sounds"), b);
+        });
+    });
 }
 
 #[cfg(test)]
@@ -511,6 +590,27 @@ mod tests {
         assert_eq!(t.phase, Phase::Work);
         t.stop();
         assert_eq!(t, Timer::default());
+    }
+
+    #[test]
+    fn starts_and_ends_queue_their_sounds_but_resuming_does_not() {
+        let mut t = Timer::new(Settings { auto_start_breaks: true, ..Settings::default() });
+        t.start(0.0);
+        assert_eq!(t.take_cues(), [Cue::WorkStart]);
+        t.pause(MIN);
+        t.start(2.0 * MIN);
+        assert!(t.take_cues().is_empty(), "a resume is silent");
+        assert_eq!(t.tick(26.0 * MIN), Some(Phase::Work));
+        assert_eq!(t.take_cues(), [Cue::End, Cue::BreakStart], "the end, then the break that started by itself");
+        assert_eq!(t.tick(31.0 * MIN), Some(Phase::ShortBreak));
+        assert_eq!(t.take_cues(), [Cue::End], "the next pomodoro waits for a start");
+        assert!(command("ui.pomodoro.preview", &json!({"cue": "end"})).is_ok());
+        assert!(command("ui.pomodoro.preview", &json!({"cue": 3})).is_err());
+        for bad in [json!({"sounds": "loud"}), json!({"sounds": 1}), json!({"volume": 101}), json!({"volume": -1}), json!({"volume": 0.5})] {
+            assert!(command("ui.pomodoro.set", &bad).is_err(), "{bad}");
+        }
+        assert_eq!(command("ui.pomodoro.set", &json!({"sounds": "fun", "volume": 0})).unwrap()["settings"]["sounds"], "fun");
+        let _ = command("ui.pomodoro.set", &json!({"sounds": "beeps", "volume": 70}));
     }
 
     #[test]

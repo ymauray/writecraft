@@ -45,6 +45,9 @@ zbus = "=5.19.0"
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 chrono = { version = "0.4.45", default-features = false, features = ["clock"] }
 craft-update = { workspace = true }
+# WriteCraft: the Pomodoro timer's sounds, synthesised in code (`pomodoro/sound.rs`); playback
+# only, no decoders.
+rodio = { version = "0.23", default-features = false, features = ["playback"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 # The browser clock (`SystemTime::now()`/`Instant::now()` panic on wasm32).
