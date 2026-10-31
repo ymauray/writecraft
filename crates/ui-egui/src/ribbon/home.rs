@@ -51,6 +51,15 @@ pub(super) fn home(app: &mut WordApp, ui: &mut Ui) {
         });
     });
     group(ui, "Font", Some("format.fontDialog"), app, |ui, app| {
+        if crate::writecraft::trimmed() {
+            // WriteCraft: Bold, Italic and Underline only.
+            crate::widgets::row(ui, |ui| {
+                small(ui, app, "bold", None, "Bold", crate::widgets::ButtonAction::new("format.bold", json!({}), flag("bold")));
+                small(ui, app, "italic", None, "Italic", crate::widgets::ButtonAction::new("format.italic", json!({}), flag("italic")));
+                small(ui, app, "underline", None, "Underline", crate::widgets::ButtonAction::new("format.underline", json!({}), flag("underline")));
+            });
+            return;
+        }
         stack(ui, |ui| {
             crate::widgets::row(ui, |ui| {
                 let font = st.get("font").and_then(Value::as_str).unwrap_or("").to_string();

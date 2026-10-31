@@ -62,13 +62,14 @@ pub(crate) fn hides_command(id: &str) -> bool {
     trimmed() && HIDDEN_COMMANDS.contains(&id)
 }
 
-/// Whether the group titled `title` loses its dialog launcher (Styles: no styles pane).
+/// Whether the group titled `title` loses its dialog launcher (Styles: no styles pane; Font:
+/// no Font dialog).
 pub(crate) fn hides_launcher(title: &str) -> bool {
-    trimmed() && title == "Styles"
+    trimmed() && matches!(title, "Styles" | "Font")
 }
 
-/// The Home groups left off the ribbon.
-pub const HIDDEN_HOME_GROUPS: [&str; 4] = ["Font", "Paragraph", "Voice", "Editor"];
+/// The Home groups left off the ribbon. Font stays, with Bold, Italic and Underline only.
+pub const HIDDEN_HOME_GROUPS: [&str; 3] = ["Paragraph", "Voice", "Editor"];
 
 /// Whether the Home tab leaves out the group titled `title`.
 pub(crate) fn hides_home_group(title: &str) -> bool {
@@ -76,7 +77,7 @@ pub(crate) fn hides_home_group(title: &str) -> bool {
 }
 
 /// The Home KeyTips that stay with the trims: those of the groups still shown.
-pub(crate) const HOME_KEYTIPS: [&str; 7] = ["Paste", "Cut", "Copy", "Format Painter", "Find", "Replace", "Select"];
+pub(crate) const HOME_KEYTIPS: [&str; 10] = ["Paste", "Cut", "Copy", "Format Painter", "Bold", "Italic", "Underline", "Find", "Replace", "Select"];
 
 #[cfg(test)]
 mod tests {
@@ -99,12 +100,22 @@ mod tests {
     }
 
     #[test]
-    fn home_leaves_out_font_paragraph_voice_and_editor() {
+    fn home_keeps_bold_italic_underline_and_leaves_out_the_rest() {
         set_trimmed(true);
         let mut h = home_harness();
         h.run_steps(4);
-        for gone in [(Role::TextInput, "Font"), (Role::Button, "Bold"), (Role::Button, "Align Left"), (Role::Button, "Dictate")] {
+        for gone in [
+            (Role::TextInput, "Font"),
+            (Role::TextInput, "Font Size"),
+            (Role::Button, "Strikethrough"),
+            (Role::Button, "Font Color"),
+            (Role::Button, "Align Left"),
+            (Role::Button, "Dictate"),
+        ] {
             assert!(h.query_by_role_and_label(gone.0, tl!(gone.1)).is_none(), "{} is gone", gone.1);
+        }
+        for kept in ["Bold", "Italic", "Underline"] {
+            assert!(h.query_by_role_and_label(Role::Button, tl!(kept)).is_some(), "{kept} stays");
         }
         for kept in ["Cut", "Copy", "Replace"] {
             assert!(h.query_by_label(tl!(kept)).is_some(), "{kept} stays");
