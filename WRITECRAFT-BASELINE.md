@@ -23,7 +23,7 @@ cargo test --workspace --doc
 | Étape | Résultat |
 |---|---|
 | Tests (nextest, `--no-fail-fast`) | 4590 lancés : **4588 réussis, 2 échoués, 5 ignorés** (46 s) |
-| Audit i18n (`i18n-report`) | ✅ réussi (103 s) ; rapport des traductions manquantes non produit, faute de `CRAFT_I18N_DIR` |
+| Audit i18n (`i18n-report`) | ✅ réussi (103 s) ; avec `CRAFT_I18N_DIR` : voir « Traduction française » ci-dessous |
 | Doctests | ✅ aucun échec |
 | fmt, clippy, assets, layers, wasm | pas relancés dans ce relevé |
 
@@ -45,3 +45,50 @@ Ces deux tests dépendent des polices système : ils peuvent passer sur une autr
 | `wordcraft-ui-egui mini_toolbar::tests::the_bar_scrolls_under_the_ribbon_not_over_it` | en conflit avec l'ancre de sélection de #1501 |
 | `wordcraft-ui-egui tests::perf::big_table_scroll_bench` | banc de performance (`#[ignore]`) |
 | `wordcraft-ui-egui i18n::audit::untranslated_interface_text` | exclu de la passe principale, lancé à part par `cargo xtask i18n-report` (réussi) |
+
+## Traduction française
+
+Les traductions viennent de [storytold/craft-i18n](https://github.com/storytold/craft-i18n), au
+commit de `craft-i18n.rev` (`9205108c`), cloné dans `../craft-i18n`. Sans `CRAFT_I18N_DIR`,
+l'interface est en anglais seulement.
+
+```sh
+CRAFT_I18N_DIR=/Volumes/EVO_PRO_1T/Development/craft-i18n cargo xtask i18n-report
+```
+
+Relevé du 2026-10-31 pour `fr` : **25 textes sans traduction** et 74 textes volontairement
+identiques à l'anglais (« Normal », « Zoom », « Options », « OK », noms propres…, ce qui est normal).
+
+Textes sans traduction française (25) :
+
+- Accept All Changes and Stop Tracking
+- Accept and Move to Next
+- Advanced Properties…
+- Check for\nUpdates…
+- Checking for updates…
+- Close Document
+- Dock Left
+- Dock Right
+- Float
+- Move Pane: {title}
+- Page color
+- Pane Options
+- Reading Page Color
+- Reject All Changes and Stop Tracking
+- Reject and Move to Next
+- Resize Pane
+- Scale Font Sizes
+- Separate text with
+- Spanish (Latin America)
+- Spanish (Uruguay)
+- Styles Pane Position
+- Switch\nWindows
+- Switch Windows
+- View and edit the document's custom properties.
+- {name} options
+
+Vu dans l'application mais absent de ce rapport : la fenêtre de mise à jour au démarrage
+(« WordCraft 0.13.2 is available… », « What's new », « Later », « Download ») reste en anglais.
+
+Règle : une modification ne doit pas allonger cette liste ; un nouveau texte d'interface
+reçoit sa traduction française (dans craft-i18n, ou dans un catalogue propre à WriteCraft).
