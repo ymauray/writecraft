@@ -473,6 +473,7 @@ fn main() -> eframe::Result {
             app.set_startup_update_check(false);
             wordcraft_ui_egui::writecraft::set_trimmed(true);
             load_prefs(&mut app);
+            wordcraft_ui_egui::writecraft::apply_app_defaults(&mut app);
             load_user_dictionary(&mut app);
             // A region chosen in File › Options replaces the system's for the first blank
             // document too (#838).

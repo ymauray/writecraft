@@ -1,17 +1,21 @@
-//! WriteCraft's defaults for new blank documents: French text, and Normal and Heading 1 set
-//! for writing (Georgia, justified body, first-line indents, 1.5 line spacing).
+//! WriteCraft's defaults for new blank documents: French text, Normal and Heading 1 set for
+//! writing (Georgia, justified body, first-line indents, 1.5 line spacing), an Ellipse style for
+//! scene breaks, and a Styles gallery of Normal, Title, Heading 1 and Ellipse only.
 //!
 //! The apps turn them on ([`crate::Session::writecraft_defaults`]); a session without them (the
 //! tests inherited from WordCraft, the CLI, MCP) keeps WordCraft's Normal template.
 
 use wordcraft_doc::Document;
-use wordcraft_doc::props::{Align, LineSpacing};
+use wordcraft_doc::props::{Align, LineSpacing, ParaProps};
+use wordcraft_doc::styles::{Style, StyleKind};
 
 /// The language new documents are written in.
 pub const LANGUAGE: &str = "fr-FR";
 /// The body and heading font. A system font on macOS and Windows; elsewhere the font
 /// substitution picks an open serif.
 pub const FONT: &str = "Georgia";
+/// The styles the Styles gallery offers, in order.
+pub const GALLERY: [&str; 4] = ["Normal", "Title", "Heading1", "Ellipse"];
 /// Points in a centimetre.
 const CM: f32 = 72.0 / 2.54;
 
@@ -39,6 +43,28 @@ pub fn apply_defaults(doc: &mut Document) {
         h1.para.space_before = Some(24.0);
         h1.para.space_after = Some(12.0);
         h1.para.line_spacing = Some(LineSpacing::Multiple(1.5));
+    }
+    // Ellipse: a centred scene break, as Normal but without the indent, 12 pt around, single spacing.
+    styles.upsert(Style {
+        id: "Ellipse".into(),
+        name: "Ellipse".into(),
+        kind: StyleKind::Paragraph,
+        based_on: Some("Normal".into()),
+        next: Some("Normal".into()),
+        para: ParaProps {
+            align: Some(Align::Center),
+            indent_first: Some(0.0),
+            space_before: Some(12.0),
+            space_after: Some(12.0),
+            line_spacing: Some(LineSpacing::Multiple(1.0)),
+            ..ParaProps::default()
+        },
+        priority: Some(11),
+        quick: true,
+        ..Style::default()
+    });
+    for st in styles.styles.iter_mut() {
+        st.quick = GALLERY.contains(&st.id.as_str());
     }
 }
 
@@ -69,5 +95,14 @@ mod tests {
         assert_eq!((h1.chr.font.as_deref(), h1.chr.bold, h1.chr.size, h1.chr.color), (Some(FONT), Some(true), Some(20.0), None));
         assert_eq!((h1.para.align, h1.para.space_before, h1.para.space_after), (Some(Align::Left), Some(24.0), Some(12.0)));
         assert_eq!(h1.para.line_spacing, Some(LineSpacing::Multiple(1.5)));
+        let ellipse = s.doc.styles.get("Ellipse").unwrap();
+        assert_eq!((ellipse.based_on.as_deref(), ellipse.para.align, ellipse.para.indent_first), (Some("Normal"), Some(Align::Center), Some(0.0)));
+        assert_eq!((ellipse.para.space_before, ellipse.para.space_after), (Some(12.0), Some(12.0)));
+        assert_eq!(ellipse.para.line_spacing, Some(LineSpacing::Multiple(1.0)));
+        let mut quick: Vec<&str> = s.doc.styles.styles.iter().filter(|st| st.quick).map(|st| st.id.as_str()).collect();
+        quick.sort_unstable();
+        let mut gallery = GALLERY.to_vec();
+        gallery.sort_unstable();
+        assert_eq!(quick, gallery);
     }
 }

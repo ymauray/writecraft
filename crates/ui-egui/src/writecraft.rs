@@ -22,6 +22,14 @@ pub fn trimmed() -> bool {
     TRIMMED.with(Cell::get)
 }
 
+/// WriteCraft's app settings, applied after the saved preferences: no spell checking (the
+/// proofing tools have no French).
+pub fn apply_app_defaults(app: &mut crate::WordApp) {
+    app.session.view.proofing = false;
+    app.session.prefs.check_spelling = false;
+    app.ui.check_spelling = false;
+}
+
 /// The built-in ribbon tabs left off the strip.
 pub const HIDDEN_TABS: [&str; 8] = ["Insert", "Draw", "Design", "Layout", "References", "Mailings", "Developer", "Zotero"];
 
@@ -106,6 +114,14 @@ mod tests {
         let badges = crate::keytips::badge_tabs(h.state());
         assert!(HIDDEN_TABS.iter().all(|t| !badges.contains(t)), "no KeyTips for hidden tabs: {badges:?}");
         set_trimmed(false);
+    }
+
+    #[test]
+    fn app_defaults_turn_spell_checking_off() {
+        let mut app = WordApp::new(Session::new(wordcraft_doc::Document::from_text("Text")), Services::default());
+        assert!(app.session.view.proofing, "WordCraft checks spelling");
+        apply_app_defaults(&mut app);
+        assert!(!app.session.view.proofing && !app.session.prefs.check_spelling && !app.ui.check_spelling);
     }
 
     #[test]
