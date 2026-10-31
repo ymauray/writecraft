@@ -1,7 +1,8 @@
 # WriteCraft — base de référence des tests
 
-> Relevé le 2026-10-31 sur le Mac (macOS 27.0.1, build 26A434), commit `69e5ec0b`,
-> cargo-nextest 0.9.150. Le code n'a pas été modifié : ce relevé décrit l'état de départ.
+> Relevé le 2026-10-31 sur le Mac (macOS 27.0.1, build 26A434), cargo-nextest 0.9.150, avec
+> `CRAFT_I18N_DIR` défini. Mis à jour après les premières modifications WriteCraft (commit
+> `5808ce8a`) ; l'état de départ (commit `69e5ec0b`) est rappelé en dessous.
 > Règle : une modification ne doit ajouter **aucun** échec ni test ignoré à cette liste.
 
 ## Commande
@@ -20,12 +21,19 @@ cargo test --workspace --doc
 
 ## Résultat
 
-| Étape | Résultat |
-|---|---|
-| Tests (nextest, `--no-fail-fast`) | 4590 lancés : **4588 réussis, 2 échoués, 5 ignorés** (46 s) |
-| Audit i18n (`i18n-report`) | ✅ réussi (103 s) ; avec `CRAFT_I18N_DIR` : voir « Traduction française » ci-dessous |
-| Doctests | ✅ aucun échec |
-| fmt, clippy, assets, layers, wasm | pas relancés dans ce relevé |
+| Étape | Actuel (`5808ce8a`) | Départ (`69e5ec0b`) |
+|---|---|---|
+| Tests (nextest, `--no-fail-fast`) | 4597 lancés : **4595 réussis, 2 échoués, 5 ignorés** (71 s) | 4590 lancés : 4588 réussis, 2 échoués, 5 ignorés |
+| Audit i18n (`i18n-report`) | ✅ réussi ; voir « Traduction française » | ✅ réussi |
+| Doctests | ✅ aucun échec | ✅ aucun échec |
+| fmt, clippy (`--workspace --all-targets -D warnings`) | ✅ | pas relancés |
+| assets, layers | ✅ (57 fichiers attribués ; 20 crates, aucune violation) | pas relancés |
+| wasm | ⚠️ pas vérifiable : la cible `wasm32-unknown-unknown` manque (Rust de Homebrew, sans `rustup`) | pas relancé |
+
+Les 7 tests en plus sont les tests WriteCraft (`crates/engine/src/writecraft.rs`,
+`crates/ui-egui/src/writecraft.rs`). Trois tests de WordCraft ont été adaptés aux boutons
+supprimés pour tout le monde (Partager, Discord) : `ribbon::tests::tab_strip_never_overlaps_the_right_buttons`,
+`ribbon::tests::the_tab_strip_buttons_have_names`, `tests::the_default_app_button_shows_only_with_the_hosts_hook`.
 
 ## Échecs connus (2)
 
@@ -56,16 +64,16 @@ l'interface est en anglais seulement.
 CRAFT_I18N_DIR=/Volumes/EVO_PRO_1T/Development/craft-i18n cargo xtask i18n-report
 ```
 
-Relevé du 2026-10-31 pour `fr` : **25 textes sans traduction** et 74 textes volontairement
-identiques à l'anglais (« Normal », « Zoom », « Options », « OK », noms propres…, ce qui est normal).
+Relevé du 2026-10-31 pour `fr` : **23 textes sans traduction** (25 au départ) et 73 textes
+volontairement identiques à l'anglais (74 au départ ; « Normal », « Zoom », « Options », « OK »,
+noms propres…, ce qui est normal). Les deux textes de « Check for Updates » ont disparu avec le
+bouton.
 
-Textes sans traduction française (25) :
+Textes sans traduction française (23) :
 
 - Accept All Changes and Stop Tracking
 - Accept and Move to Next
 - Advanced Properties…
-- Check for\nUpdates…
-- Checking for updates…
 - Close Document
 - Dock Left
 - Dock Right
@@ -87,8 +95,8 @@ Textes sans traduction française (25) :
 - View and edit the document's custom properties.
 - {name} options
 
-Vu dans l'application mais absent de ce rapport : la fenêtre de mise à jour au démarrage
-(« WordCraft 0.13.2 is available… », « What's new », « Later », « Download ») reste en anglais.
+La fenêtre de mise à jour au démarrage, qui restait en anglais, n'apparaît plus (commit
+`1fdc4cdd`).
 
 Règle : une modification ne doit pas allonger cette liste ; un nouveau texte d'interface
 reçoit sa traduction française (dans craft-i18n, ou dans un catalogue propre à WriteCraft).
