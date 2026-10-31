@@ -463,7 +463,9 @@ fn main() -> eframe::Result {
             let mut session = Session::new(doc);
             session.system_region = region;
             let mut app = WordApp::new(session, services(file_dialog, &cc.egui_ctx));
-            app.set_startup_update_check(true);
+            // WriteCraft: no update check at start. The updater only knows WordCraft's releases,
+            // so its prompt would offer to replace this fork with upstream WordCraft.
+            app.set_startup_update_check(false);
             load_prefs(&mut app);
             load_user_dictionary(&mut app);
             // A region chosen in File › Options replaces the system's for the first blank
