@@ -143,7 +143,7 @@ pub fn tab_letter(tab: &str) -> &'static str {
 
 /// The tabs that carry a badge, in display order.
 pub fn badge_tabs(app: &WordApp) -> Vec<&'static str> {
-    let mut v: Vec<&'static str> = TAB_LETTERS.iter().filter(|(_, l)| !l.is_empty()).map(|(t, _)| *t).collect();
+    let mut v: Vec<&'static str> = TAB_LETTERS.iter().filter(|(t, l)| !l.is_empty() && !crate::writecraft::hides_tab(t)).map(|(t, _)| *t).collect();
     if crate::ribbon::in_table_public(app) {
         v.extend_from_slice(&["Table Design", "Table Layout"]);
     }

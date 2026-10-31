@@ -106,7 +106,8 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
     // The tabs shown: File, the user's tabs in their order (Customize Ribbon, #379), then the
     // contextual ones (the Outlining tab right after File). A contextual tab (Table, Picture
     // Format) may be stored while the selection moved away, and a tab may have been hidden.
-    let user_tabs = app.session.ribbon.tabs().into_owned();
+    let mut user_tabs = app.session.ribbon.tabs().into_owned();
+    crate::writecraft::trim_tabs(&mut user_tabs);
     let mut tabs: Vec<(String, bool)> = vec![("File".to_string(), false)];
     tabs.extend(user_tabs.iter().filter(|e| !e.hidden).map(|e| (e.name.clone(), e.custom)));
     for ct in contextual_tabs(&app.session) {

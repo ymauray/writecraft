@@ -22,6 +22,21 @@ pub fn trimmed() -> bool {
     TRIMMED.with(Cell::get)
 }
 
+/// The built-in ribbon tabs left off the strip.
+pub const HIDDEN_TABS: [&str; 8] = ["Insert", "Draw", "Design", "Layout", "References", "Mailings", "Developer", "Zotero"];
+
+/// Whether the strip leaves out the built-in tab `name`.
+pub(crate) fn hides_tab(name: &str) -> bool {
+    trimmed() && HIDDEN_TABS.contains(&name)
+}
+
+/// Marks the built-in tabs WriteCraft leaves out as hidden (custom tabs keep their state).
+pub(crate) fn trim_tabs(tabs: &mut [wordcraft_engine::ribbon::TabEntry]) {
+    for t in tabs.iter_mut().filter(|t| !t.custom && hides_tab(&t.name)) {
+        t.hidden = true;
+    }
+}
+
 /// The Home groups left off the ribbon.
 pub const HIDDEN_HOME_GROUPS: [&str; 4] = ["Font", "Paragraph", "Voice", "Editor"];
 
@@ -75,6 +90,22 @@ mod tests {
         let mut h = home_harness();
         h.run_steps(4);
         assert!(h.query_by_role_and_label(Role::TextInput, tl!("Font")).is_some());
+    }
+
+    #[test]
+    fn the_strip_leaves_out_the_hidden_tabs() {
+        set_trimmed(true);
+        let mut h = home_harness();
+        h.run_steps(4);
+        for tab in HIDDEN_TABS {
+            assert!(h.query_by_label(tl!(tab)).is_none(), "{tab} is gone");
+        }
+        for tab in ["File", "Home", "Review", "View", "Help"] {
+            assert!(h.query_by_label(tl!(tab)).is_some(), "{tab} stays");
+        }
+        let badges = crate::keytips::badge_tabs(h.state());
+        assert!(HIDDEN_TABS.iter().all(|t| !badges.contains(t)), "no KeyTips for hidden tabs: {badges:?}");
+        set_trimmed(false);
     }
 
     #[test]
