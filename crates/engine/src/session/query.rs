@@ -204,7 +204,11 @@ impl Session {
     /// A new blank document (the Normal template) on the region's paper: Letter in the US and
     /// other Letter regions, A4 elsewhere (#838). Margins stay 2.54 cm (1") all round.
     pub fn blank_document(&self) -> Document {
-        blank_document(&self.region())
+        let mut d = blank_document(&self.region());
+        if self.writecraft_defaults {
+            crate::writecraft::apply_defaults(&mut d);
+        }
+        d
     }
 
     /// The paragraph path the caret is in.

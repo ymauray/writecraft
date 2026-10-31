@@ -64,8 +64,13 @@ pub fn start() {
                     let region = wordcraft_ui_egui::i18n::system_region();
                     // In host mode the parent sends the document to edit; no sample meanwhile.
                     let sample = app_bridge.is_none() && query().contains("sample");
-                    let doc = if sample { wordcraft_engine::sample::sample_document() } else { wordcraft_engine::blank_document(&region) };
+                    let mut doc = if sample { wordcraft_engine::sample::sample_document() } else { wordcraft_engine::blank_document(&region) };
+                    // WriteCraft: French text, Normal and Heading 1 set for writing.
+                    if !sample {
+                        wordcraft_engine::writecraft::apply_defaults(&mut doc);
+                    }
                     let mut session = Session::new(doc);
+                    session.writecraft_defaults = true;
                     session.system_region = region;
                     let messages = Rc::new(RefCell::new(Vec::new()));
                     let mut services = services(inbox.clone(), cc.egui_ctx.clone(), dirty, saves.clone(), messages.clone());

@@ -458,9 +458,14 @@ fn main() -> eframe::Result {
             // The system region picks the new document's paper, the units and the decimal
             // separator (#838).
             let region = region::system();
-            let doc = if sample { wordcraft_engine::sample::sample_document() } else { wordcraft_engine::blank_document(&region) };
+            let mut doc = if sample { wordcraft_engine::sample::sample_document() } else { wordcraft_engine::blank_document(&region) };
             let (file_dialog, dialogs) = file_dialogs::hook(&cc.egui_ctx);
+            // WriteCraft: French text, Normal and Heading 1 set for writing.
+            if !sample {
+                wordcraft_engine::writecraft::apply_defaults(&mut doc);
+            }
             let mut session = Session::new(doc);
+            session.writecraft_defaults = true;
             session.system_region = region;
             let mut app = WordApp::new(session, services(file_dialog, &cc.egui_ctx));
             // WriteCraft: no update check at start. The updater only knows WordCraft's releases,

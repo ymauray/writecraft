@@ -197,6 +197,8 @@ pub struct Session {
     /// `None` is WordCraft's default, US English. The front end sets it from the interface
     /// language with [`Session::set_editing_language`] (a Polish interface writes Polish).
     pub editing_lang: Option<String>,
+    /// WriteCraft: new blank documents get [`crate::writecraft::apply_defaults`].
+    pub writecraft_defaults: bool,
     /// Editing inside an equation: which one and the caret in it.
     pub math: Option<MathEdit>,
     /// Equations are typed in LaTeX rather than the linear format.

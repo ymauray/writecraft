@@ -154,6 +154,7 @@ impl Session {
             keymap: crate::KeyMap::default(),
             ribbon: crate::RibbonLayout::default(),
             editing_lang: None,
+            writecraft_defaults: false,
             read_aloud: Default::default(),
             password,
             #[cfg(not(target_arch = "wasm32"))]
