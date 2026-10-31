@@ -577,6 +577,14 @@ pub fn status_bar(app: &mut WordApp, ui: &mut Ui) {
                 if st(ui, &wtxt).clicked() {
                     let _ = app.run("ui.dialog", json!({"name": "wordCount"}));
                 }
+                // WriteCraft: the words written today and in the current (or last) pomodoro.
+                if crate::writecraft::trimmed() {
+                    let (today, session) = crate::word_tally::status_texts();
+                    st(ui, &today).on_hover_text(crate::writecraft::text("Words written today, in every document"));
+                    if let Some(session) = session {
+                        st(ui, &session).on_hover_text(crate::writecraft::text("Words written in the current or last pomodoro"));
+                    }
+                }
                 if app.session.sel.focus.story != StoryRef::Body && !crate::canvas::in_text_box(app) {
                     let label = match crate::canvas::part_kind(app, app.session.sel.focus.story) {
                         Some(PartKind::Footnote) => tl!("Editing footnote"),

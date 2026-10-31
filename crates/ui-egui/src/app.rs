@@ -217,6 +217,7 @@ impl WordApp {
     pub fn logic(&mut self, ctx: &egui::Context) {
         updates_ui::tick(self, ctx);
         crate::pomodoro::tick(self, ctx);
+        crate::word_tally::tick(self);
         let lang = i18n::Lang::from_pref(&self.ui.language);
         i18n::set_current(lang);
         // New documents are written in the interface's language when WordCraft can proof it

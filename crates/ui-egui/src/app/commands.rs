@@ -488,6 +488,10 @@ impl WordApp {
         if id.starts_with("ui.pomodoro.") {
             return Some(crate::pomodoro::command(id, p));
         }
+        // WriteCraft: the words written today and in the pomodoro.
+        if id.starts_with("ui.wordTally.") {
+            return Some(crate::word_tally::command(id));
+        }
         Some(Ok(match id {
             "ui.checkForUpdates" | "help.checkForUpdates" => {
                 crate::updates_ui::check(self);

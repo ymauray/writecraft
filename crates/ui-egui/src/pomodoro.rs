@@ -117,6 +117,8 @@ pub struct Timer {
     pub started: bool,
     /// Sounds to play for what just happened (taken by `take_cues`).
     cues: Vec<Cue>,
+    /// Counts the pomodoros started from the top, so the session word count knows a new one began.
+    pub work_sessions: u32,
 }
 
 impl Default for Timer {
@@ -129,7 +131,7 @@ impl Timer {
     pub fn new(settings: Settings) -> Self {
         let settings = settings.clamped();
         let remaining_ms = settings.total_ms(Phase::Work);
-        Timer { settings, phase: Phase::Work, completed: 0, running: false, remaining_ms, deadline_ms: 0.0, started: false, cues: Vec::new() }
+        Timer { settings, phase: Phase::Work, completed: 0, running: false, remaining_ms, deadline_ms: 0.0, started: false, cues: Vec::new(), work_sessions: 0 }
     }
 
     pub fn total_ms(&self) -> f64 {
@@ -156,6 +158,9 @@ impl Timer {
             // A period starting from the top (not resumed after a pause) is announced.
             if self.remaining_ms >= self.total_ms() {
                 self.cues.push(if self.phase == Phase::Work { Cue::WorkStart } else { Cue::BreakStart });
+                if self.phase == Phase::Work {
+                    self.work_sessions = self.work_sessions.wrapping_add(1);
+                }
             }
             self.deadline_ms = now + self.remaining_ms;
             self.running = true;
@@ -182,7 +187,8 @@ impl Timer {
 
     /// Back to the first pomodoro, stopped.
     pub fn stop(&mut self) {
-        *self = Timer::new(self.settings.clone());
+        let sessions = self.work_sessions;
+        *self = Timer { work_sessions: sessions, ..Timer::new(self.settings.clone()) };
     }
 
     /// Go to the next period. A skipped pomodoro isn't counted as finished.
@@ -254,6 +260,12 @@ impl Timer {
 thread_local! {
     static TIMER: RefCell<Timer> = RefCell::new(Timer::default());
     static SETTINGS_FILE: RefCell<Option<PathBuf>> = const { RefCell::new(None) };
+}
+
+/// The pomodoro the session word count belongs to: its number (changes when a new one starts)
+/// and whether words written now count (a pomodoro is running). `None` before the first one.
+pub fn work_session() -> Option<(u32, bool)> {
+    with(|t| (t.work_sessions > 0).then(|| (t.work_sessions, t.running && t.phase == Phase::Work)))
 }
 
 fn now() -> f64 {
@@ -589,7 +601,8 @@ mod tests {
         t.skip(53.0 * MIN);
         assert_eq!(t.phase, Phase::Work);
         t.stop();
-        assert_eq!(t, Timer::default());
+        assert_eq!(t.work_sessions, 2, "the first pomodoro and the one skipped back to");
+        assert_eq!(t, Timer { work_sessions: 2, ..Timer::default() }, "stop keeps only the session count");
     }
 
     #[test]

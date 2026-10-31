@@ -478,6 +478,7 @@ fn main() -> eframe::Result {
                 && let Some(dir) = wordcraft_control_key::settings_dir()
             {
                 wordcraft_ui_egui::pomodoro::use_settings_file(dir.join("pomodoro.json"));
+                wordcraft_ui_egui::word_tally::use_file(dir.join("words-today.json"));
             }
             load_user_dictionary(&mut app);
             // A region chosen in File › Options replaces the system's for the first blank
