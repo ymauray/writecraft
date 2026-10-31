@@ -1,6 +1,25 @@
 use super::common::{mi, stack};
 use super::language::language_menu;
-use super::{Ui, Value, WordApp, big_toggle, group, json, menu_button, small};
+use super::{Ui, Value, WordApp, big_toggle, json, menu_button};
+
+/// [`super::group`], minus the groups WriteCraft leaves off Review (Language).
+fn group(ui: &mut Ui, title: &str, launcher: Option<&str>, app: &mut WordApp, add: impl FnOnce(&mut Ui, &mut WordApp)) {
+    if !crate::writecraft::hides_review_group(title) {
+        super::group(ui, title, launcher, app, add);
+    }
+}
+
+/// [`super::small`], minus the buttons WriteCraft leaves out (Thesaurus).
+fn small(
+    ui: &mut Ui,
+    app: &mut WordApp,
+    icon: &str,
+    label: Option<&str>,
+    tip: &str,
+    action: crate::widgets::ButtonAction<'_>,
+) -> Option<egui::Response> {
+    (!crate::writecraft::hides_command(action.id)).then(|| super::small(ui, app, icon, label, tip, action))
+}
 
 /// [`super::big`], minus the buttons WriteCraft leaves out (Spelling & Grammar).
 fn big(ui: &mut Ui, app: &mut WordApp, icon: &str, label: &str, id: &str, params: Value, menu: bool) -> Option<egui::Response> {

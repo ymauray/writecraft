@@ -45,8 +45,17 @@ pub(crate) fn trim_tabs(tabs: &mut [wordcraft_engine::ribbon::TabEntry]) {
     }
 }
 
-/// Ribbon commands whose buttons and KeyTips are left out (spell checking is off).
-pub const HIDDEN_COMMANDS: [&str; 1] = ["review.spelling"];
+/// Ribbon commands whose buttons and KeyTips are left out: proofing, the English thesaurus and
+/// the language tools (spell checking is off).
+pub const HIDDEN_COMMANDS: [&str; 4] = ["review.spelling", "review.thesaurus", "review.translate", "review.language"];
+
+/// The Review groups left off the ribbon.
+pub const HIDDEN_REVIEW_GROUPS: [&str; 1] = ["Language"];
+
+/// Whether the Review tab leaves out the group titled `title`.
+pub(crate) fn hides_review_group(title: &str) -> bool {
+    trimmed() && HIDDEN_REVIEW_GROUPS.contains(&title)
+}
 
 /// Whether the ribbon leaves out the button that runs `id`.
 pub(crate) fn hides_command(id: &str) -> bool {
@@ -141,12 +150,16 @@ mod tests {
     fn no_spelling_button_and_no_styles_launcher() {
         set_trimmed(true);
         let tips: Vec<&str> = crate::keytips::controls_public("Review").into_iter().map(|c| c.tip).collect();
-        assert!(!tips.contains(&"Spelling & Grammar") && tips.contains(&"Thesaurus"), "{tips:?}");
+        for gone in ["Spelling & Grammar", "Thesaurus", "Translate", "Language"] {
+            assert!(!tips.contains(&gone), "{gone}: {tips:?}");
+        }
+        assert!(tips.contains(&"Read Aloud"), "{tips:?}");
         assert!(hides_command("review.spelling") && hides_launcher("Styles") && !hides_launcher("Clipboard"));
         let mut h = home_harness();
         h.state_mut().run("ui.tab", serde_json::json!({"tab": "Review"})).unwrap();
         h.run_steps(4);
-        assert!(h.query_by_label(tl!("Thesaurus")).is_some(), "the rest of Proofing stays");
+        assert!(h.query_by_label(tl!("Thesaurus")).is_none() && h.query_by_label(tl!("Translate")).is_none());
+        assert!(h.query_by_label(tl!("Word Count")).is_some(), "the rest of Proofing stays");
         set_trimmed(false);
         assert!(!hides_command("review.spelling") && !hides_launcher("Styles"));
     }
