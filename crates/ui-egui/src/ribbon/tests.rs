@@ -403,9 +403,8 @@ fn tab_strip_never_overlaps_the_right_buttons() {
                 app,
             );
             h.run_steps(3);
-            let buttons: Vec<Rect> =
-                [tl!("Comments"), tl!("Editing"), tl!("Share")].iter().filter_map(|b| h.query_by_label(b).map(|n| n.rect())).collect();
-            assert_eq!(buttons.len(), 3, "{lang} {width}: the three buttons are on the strip");
+            let buttons: Vec<Rect> = [tl!("Comments"), tl!("Editing")].iter().filter_map(|b| h.query_by_label(b).map(|n| n.rect())).collect();
+            assert_eq!(buttons.len(), 2, "{lang} {width}: the two buttons are on the strip");
             assert!(buttons.iter().all(|b| b.right() <= width + 0.5 && b.left() >= 0.0), "{lang} {width}: buttons inside {buttons:?}");
             for tab in crate::ribbon::TABS.iter().copied().chain(["Table Design", "Table Layout"]) {
                 // A group folded into a button can share the tab's name (Draw): only the node on
@@ -454,7 +453,7 @@ fn plan_strip_gives_way_in_order() {
     let _ = plan_strip(&[spec(f32::NAN, false, true, false)], [f32::NAN; 3], 100.0, f32::NAN);
 }
 
-/// #1110: the strip's drawn buttons have names for screen readers: Share, and the "»" that
+/// #1110: the strip's drawn buttons have names for screen readers: the "»" that
 /// holds the tabs that don't fit ("More tabs", not a glyph).
 #[test]
 fn the_tab_strip_buttons_have_names() {
@@ -469,7 +468,8 @@ fn the_tab_strip_buttons_have_names() {
         app,
     );
     h.run_steps(3);
-    h.get_by_role_and_label(egui::accesskit::Role::Button, tl!("Share"));
+    // WriteCraft has no Share button.
+    assert!(h.query_by_role_and_label(egui::accesskit::Role::Button, tl!("Share")).is_none());
     let more = h.get_by_role_and_label(egui::accesskit::Role::Button, tl!("More tabs"));
     more.click();
     h.run_steps(2);
