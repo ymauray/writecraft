@@ -124,11 +124,24 @@ Les bases sont déjà là :
 On reste synchronisé avec WordCraft : on préfère donc masquer plutôt que supprimer, et isoler les
 ajouts dans des fichiers propres à WriteCraft quand c'est possible.
 
+Dernière synchronisation : **2026-11-01, WordCraft `a88e0052`** (78 commits, fusion `65abb041`,
+sans conflit).
+
+Le remote `upstream` est en lecture seule (son adresse d'envoi est `DISABLED`). Pour le recréer :
+`git remote add upstream https://github.com/storytold/wordcraft.git && git remote set-url --push upstream DISABLED`.
+
 ```sh
 git fetch upstream
-git merge upstream/main     # ou: git rebase upstream/main
-git push origin main
+git log --oneline main..upstream/main                      # ce qui arrive
+git merge-tree --write-tree --name-only main upstream/main # essai à blanc : conflits éventuels
+git merge --no-ff upstream/main                             # fusion, jamais de rebase (main est publié)
 ```
+
+Après la fusion : la suite complète et l'audit i18n de `WRITECRAFT-BASELINE.md` (aucun nouvel
+échec, aucun nouveau test ignoré), clippy, puis un coup d'œil à l'application. Vérifier aussi
+`craft-i18n.rev` (mettre `../craft-i18n` au même commit), qu'aucun bouton ou fenêtre de mise à
+jour ne revient, et que les nouveaux boutons des onglets gardés ont leur place dans WriteCraft.
+Pousser sur `origin` ensuite.
 
 ## Où développer et tester
 
