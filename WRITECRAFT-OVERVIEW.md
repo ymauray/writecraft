@@ -1,6 +1,6 @@
 # WriteCraft — vue d'ensemble
 
-> Rédigé le 2026-10-29, mis à jour le 2026-10-31 (section « Ce qui est fait »). WriteCraft est un fork de [WordCraft](https://github.com/storytold/wordcraft)
+> Rédigé le 2026-10-29, mis à jour le 2026-11-01 (« Ce qui est fait », binaires, page GitHub). WriteCraft est un fork de [WordCraft](https://github.com/storytold/wordcraft)
 > (`upstream`) hébergé sur [ymauray/writecraft](https://github.com/ymauray/writecraft) (`origin`).
 > Objectif : un traitement de texte épuré, orienté écriture, qui reste synchronisé avec WordCraft.
 
@@ -19,9 +19,9 @@
   mise en conformité avec Clippy (`c4fafc21`, `ac2cc0c4`), puis sur la sortie de la version 0.12.0
   (`3de6ff95`) et sur le packaging (`aadb077e`, `9724f15c`).
 
-## Ce qui est fait (2026-10-31)
+## Ce qui est fait (2026-11-01)
 
-Toutes les modifications sont commitées sur `main` (commits `1fdc4cdd` à `b523152b`).
+Toutes les modifications sont commitées sur `main` (commits `1fdc4cdd` à `720fa2ee`), et poussées sur `origin`.
 
 ### Comment c'est construit
 
@@ -203,7 +203,25 @@ Les échecs observés viennent du serveur, pas du code :
 Sur le Mac (2026-10-31), les 2 seuls échecs viennent des polices système (Thai et arabe), et la
 vérification wasm ne peut pas tourner sans `rustup` : voir `WRITECRAFT-BASELINE.md`.
 
+## Page GitHub et Actions
+
+- La page du dépôt affiche `.github/README.md` (en français, capture `docs/images/writecraft-hero.png`),
+  que GitHub préfère au `README.md` de la racine, qui reste celui de WordCraft. Description et
+  sujets du dépôt réglés le 2026-11-01. Les issues sont désactivées (réglage par défaut d'un fork).
+- Seul le workflow « WriteCraft release » est actif. Ceux de WordCraft (CI, SonarCloud, Printing,
+  Packaging lint, Nix, Release) ont été désactivés à la main dans l'onglet Actions ; FreeBSD et
+  Windows ARM64 le sont par GitHub. Les fichiers restent dans `.github/workflows/` pour les fusions.
+- Premier build de test réussi le 2026-11-01 (lancement manuel, version `0.1.0-test`) : DMG
+  universel, MSI et zip Windows. Le MSI n'a pas encore été installé sur un vrai Windows.
+- Aucune release publiée : la première viendra d'un tag (`git tag v0.1.0 && git push origin v0.1.0`).
+
 ## Ce qui manque
+
+- Tester l'installateur Windows sur une vraie machine (installation, menu Démarrer, désinstallation,
+  cohabitation avec WordCraft).
+- Le dossier de réglages a changé (`WriteCraft` au lieu de `WordCraft`) ; les réglages de
+  développement ont été copiés, l'ancien dossier `~/Library/Application Support/WordCraft` peut
+  être supprimé.
 
 - Les documents de progression de WordCraft (`ROADMAP.md`, `docs/`) ne décrivent pas les
   modifications WriteCraft ; elles sont suivies ici.
