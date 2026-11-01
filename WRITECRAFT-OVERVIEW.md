@@ -21,7 +21,7 @@
 
 ## Ce qui est fait (2026-10-31)
 
-Toutes les modifications sont commitées sur `main` (commits `1fdc4cdd` à `5808ce8a`).
+Toutes les modifications sont commitées sur `main` (commits `1fdc4cdd` à `b523152b`).
 
 ### Comment c'est construit
 
