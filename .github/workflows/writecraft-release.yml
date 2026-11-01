@@ -1,0 +1,139 @@
+name: WriteCraft release
+
+# WriteCraft: builds the macOS DMG and the Windows MSI and portable zip (packaging/writecraft).
+# A tag vX.Y.Z publishes them as a GitHub release; a manual run only keeps them as the run's
+# artifacts. WordCraft's own release.yml (shared craft workflow, release branch) is not used.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version for a test build, e.g. 0.1.0-rc.1 (empty: 0.0.0-dev)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: writecraft-release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CRAFT_I18N_REQUIRED: "1"
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - id: v
+        shell: bash
+        env:
+          INPUT: ${{ inputs.version }}
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then v="${GITHUB_REF_NAME#v}"; else v="${INPUT:-0.0.0-dev}"; fi
+          if [[ ! "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::version '$v' is not X.Y.Z or X.Y.Z-pre"; exit 1
+          fi
+          echo "version=$v" >>"$GITHUB_OUTPUT"
+
+  macos:
+    needs: [version]
+    runs-on: macos-15
+    timeout-minutes: 90
+    env:
+      WRITECRAFT_VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Read the craft-i18n commit
+        id: i18n
+        shell: bash
+        run: echo "rev=$(tr -d '[:space:]' < craft-i18n.rev)" >>"$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: storytold/craft-i18n
+          ref: ${{ steps.i18n.outputs.rev }}
+          path: craft-i18n
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1
+        with:
+          toolchain: stable
+          targets: aarch64-apple-darwin, x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          key: writecraft-macos-universal
+      - name: Build and package
+        env:
+          CRAFT_I18N_DIR: ${{ github.workspace }}/craft-i18n
+        run: packaging/writecraft/macos.sh --arch universal
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: writecraft-macos
+          path: dist/release/*
+          if-no-files-found: error
+
+  windows:
+    needs: [version]
+    runs-on: windows-latest
+    timeout-minutes: 90
+    env:
+      WRITECRAFT_VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Read the craft-i18n commit
+        id: i18n
+        shell: bash
+        run: echo "rev=$(tr -d '[:space:]' < craft-i18n.rev)" >>"$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: storytold/craft-i18n
+          ref: ${{ steps.i18n.outputs.rev }}
+          path: craft-i18n
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1
+        with:
+          toolchain: stable
+          targets: x86_64-pc-windows-msvc
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          key: writecraft-windows-x64
+      - name: Install WiX
+        shell: pwsh
+        run: |
+          dotnet tool install --global wix --version 5.0.2
+          wix extension add -g WixToolset.UI.wixext/5.0.2
+          wix extension add -g WixToolset.Util.wixext/5.0.2
+      - name: Build and package
+        shell: pwsh
+        env:
+          CRAFT_I18N_DIR: ${{ github.workspace }}\craft-i18n
+        run: ./packaging/writecraft/windows.ps1 -Arch x64
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: writecraft-windows
+          path: dist/release/*
+          if-no-files-found: error
+
+  release:
+    if: github.ref_type == 'tag'
+    needs: [version, macos, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          prerelease=()
+          [[ "$VERSION" == *-* ]] && prerelease=(--prerelease)
+          gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" \
+            --title "WriteCraft $VERSION" --generate-notes "${prerelease[@]}"

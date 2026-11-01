@@ -363,8 +363,8 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
             });
             // Centred title.
             let title = if !app.has_document() {
-                // No document open (#1129): the app's name alone.
-                "WordCraft".to_string()
+                // No document open (#1129): the app's name alone (WriteCraft: its own name).
+                crate::writecraft::app_name().to_string()
             } else {
                 format!(
                     "{} — {}",

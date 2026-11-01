@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- WriteCraft app icon (original artwork for WriteCraft; MIT OR Apache-2.0): a fountain-pen
+       nib drawing a line of ink, on a terracotta tile. -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D9674A"/>
+      <stop offset="1" stop-color="#B4472F"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#tile)"/>
+  <g transform="translate(-14 10)">
+  <!-- the line the nib writes -->
+  <path d="M92 392 C124 362 150 420 182 394 S 222 372 232 384" fill="none" stroke="#1d1a17" stroke-width="18" stroke-linecap="round"/>
+  <g transform="translate(56 6) rotate(38 256 256) translate(256 256) scale(0.9) translate(-256 -256)">
+    <!-- grip band -->
+    <rect x="198" y="58" width="116" height="40" rx="8" fill="#1d1a17"/>
+    <!-- nib -->
+    <path d="M200 98 H312 L332 196 C332 262 292 326 256 412 C220 326 180 262 180 196 Z" fill="#F4EDE0" stroke="#1d1a17" stroke-width="12" stroke-linejoin="round"/>
+    <!-- shoulders -->
+    <path d="M186 168 C214 180 298 180 326 168" fill="none" stroke="#1d1a17" stroke-width="8" stroke-linecap="round"/>
+    <!-- breather hole and slit -->
+    <circle cx="256" cy="244" r="17" fill="#1d1a17"/>
+    <line x1="256" y1="262" x2="256" y2="402" stroke="#1d1a17" stroke-width="9" stroke-linecap="round"/>
+  </g>
+  </g>
+</svg>

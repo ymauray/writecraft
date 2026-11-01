@@ -83,9 +83,9 @@ fn application_dirs(data_home: Option<&str>, data_dirs: Option<&str>, home: Opti
 mod windows {
     use wordcraft_ui_egui::DefaultApp;
 
-    /// Settings › Default apps, on the page of the app registered as `WordCraft` under
-    /// `HKLM\Software\RegisteredApplications` (the MSI writes it).
-    const SETTINGS_URI: &str = "ms-settings:defaultapps?registeredAppMachine=WordCraft";
+    /// Settings › Default apps, on the page of the app registered as `WriteCraft` under
+    /// `HKCU\Software\RegisteredApplications` (WriteCraft installs per user: `packaging/writecraft/writecraft.wxs`).
+    const SETTINGS_URI: &str = "ms-settings:defaultapps?registeredAppUser=WriteCraft";
 
     pub(super) fn open_default_apps() -> Result<DefaultApp, String> {
         open::that_detached(SETTINGS_URI).map_err(|e| format!("couldn't open Settings: {e}"))?;

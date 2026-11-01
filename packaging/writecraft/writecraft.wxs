@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WriteCraft's installer: its own name, UpgradeCode, folder, registry keys and ProgIds, so it
+     installs beside WordCraft. Adapted from WordCraft's packaging/windows/wordcraft.wxs. One
+     dual-scope package without the scope dialog: per user by default (no administrator), into
+     %LOCALAPPDATA%\Programs\WriteCraft; msiexec ALLUSERS=1 installs it for everyone. Built by
+     packaging/writecraft/windows.ps1. -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Name="WriteCraft" Manufacturer="WriteCraft contributors" Version="$(var.Version)" UpgradeCode="FAAFBC6F-42EB-42B3-B9C6-C524198D8465" Scope="perUserOrMachine" Compressed="yes" Language="1033">
+    <SummaryInformation Description="WriteCraft word processor" Manufacturer="WriteCraft contributors" />
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of WriteCraft is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Icon Id="WritecraftIcon.ico" SourceFile="$(var.IconPath)" />
+    <Property Id="ARPPRODUCTICON" Value="WritecraftIcon.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/ymauray/writecraft" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/ymauray/writecraft/releases" />
+
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch WriteCraft" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <Property Id="WixShellExecTarget" Value="[#WritecraftExe]" />
+    <CustomAction Id="LaunchWritecraft" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" DllEntry="WixShellExec" Impersonate="yes" Return="ignore" />
+    <UI>
+      <ui:WixUI Id="WixUI_Minimal" />
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchWritecraft" Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed" />
+    </UI>
+
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="WriteCraft" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+
+    <Feature Id="Main" Title="WriteCraft" Level="1">
+      <ComponentGroupRef Id="AppNotices" />
+      <ComponentGroupRef Id="WritecraftFiles" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="AppNotices" Directory="INSTALLFOLDER">
+      <Files Include="$(var.AppNoticesDir)\**" />
+    </ComponentGroup>
+    <ComponentGroup Id="WritecraftFiles" Directory="INSTALLFOLDER">
+      <Component Id="WritecraftApp" Guid="9703258F-86A5-4802-A97A-AE81B8B5E3F4">
+        <File Id="WritecraftExe" Source="$(var.BinDir)\writecraft.exe" KeyPath="yes">
+          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="WriteCraft" Description="WriteCraft word processor" WorkingDirectory="INSTALLFOLDER" Advertise="yes" Icon="WritecraftIcon.ico" IconIndex="0" />
+        </File>
+        <RegistryValue Root="HKMU" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\writecraft.exe" Value="[#WritecraftExe]" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\WriteCraft" Name="InstallDir" Value="[INSTALLFOLDER]" Type="string" />
+      </Component>
+
+      <!-- File associations, as WordCraft's (packaging/windows/wordcraft.wxs) under WriteCraft's
+           own names: "Open with" and Settings › Default apps, never taking over a default. -->
+      <Component Id="WritecraftFileTypes" Guid="BDCCB8D3-5862-4C72-AE98-37B8573D13F8">
+        <RegistryValue Root="HKMU" Key="Software\RegisteredApplications" Name="WriteCraft" Value="Software\WriteCraft\Capabilities" Type="string" KeyPath="yes" />
+        <RegistryValue Root="HKMU" Key="Software\WriteCraft\Capabilities" Name="ApplicationName" Value="WriteCraft" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\WriteCraft\Capabilities" Name="ApplicationDescription" Value="A distraction-free word processor for writers; opens and saves Word files." Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\WriteCraft\Capabilities" Name="ApplicationIcon" Value="&quot;[#WritecraftExe]&quot;,0" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\writecraft.exe" Name="FriendlyAppName" Value="WriteCraft" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\writecraft.exe\shell\open\command" Value="&quot;[#WritecraftExe]&quot; &quot;%1&quot;" Type="string" />
+
+        <ProgId Id="WriteCraft.Document" Description="Word Document" Icon="WritecraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\WriteCraft.Document\shell\open\command" Value="&quot;[#WritecraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.docx\OpenWithProgids" Name="WriteCraft.Document" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\writecraft.exe\SupportedTypes" Name=".docx" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\WriteCraft\Capabilities\FileAssociations" Name=".docx" Value="WriteCraft.Document" Type="string" />
+
+        <ProgId Id="WriteCraft.DocumentMacroEnabled" Description="Word Macro-Enabled Document" Icon="WritecraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\WriteCraft.DocumentMacroEnabled\shell\open\command" Value="&quot;[#WritecraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.docm\OpenWithProgids" Name="WriteCraft.DocumentMacroEnabled" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\writecraft.exe\SupportedTypes" Name=".docm" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\WriteCraft\Capabilities\FileAssociations" Name=".docm" Value="WriteCraft.DocumentMacroEnabled" Type="string" />
+
+        <ProgId Id="WriteCraft.Template" Description="Word Template" Icon="WritecraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\WriteCraft.Template\shell\open\command" Value="&quot;[#WritecraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.dotx\OpenWithProgids" Name="WriteCraft.Template" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\writecraft.exe\SupportedTypes" Name=".dotx" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\WriteCraft\Capabilities\FileAssociations" Name=".dotx" Value="WriteCraft.Template" Type="string" />
+
+        <ProgId Id="WriteCraft.TemplateMacroEnabled" Description="Word Macro-Enabled Template" Icon="WritecraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\WriteCraft.TemplateMacroEnabled\shell\open\command" Value="&quot;[#WritecraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.dotm\OpenWithProgids" Name="WriteCraft.TemplateMacroEnabled" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\writecraft.exe\SupportedTypes" Name=".dotm" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\WriteCraft\Capabilities\FileAssociations" Name=".dotm" Value="WriteCraft.TemplateMacroEnabled" Type="string" />
+
+        <ProgId Id="WriteCraft.LegacyDocument" Description="Legacy Word Document" Icon="WritecraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\WriteCraft.LegacyDocument\shell\open\command" Value="&quot;[#WritecraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.doc\OpenWithProgids" Name="WriteCraft.LegacyDocument" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\writecraft.exe\SupportedTypes" Name=".doc" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\WriteCraft\Capabilities\FileAssociations" Name=".doc" Value="WriteCraft.LegacyDocument" Type="string" />
+
+        <ProgId Id="WriteCraft.LegacyTemplate" Description="Legacy Word Template" Icon="WritecraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\WriteCraft.LegacyTemplate\shell\open\command" Value="&quot;[#WritecraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.dot\OpenWithProgids" Name="WriteCraft.LegacyTemplate" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\writecraft.exe\SupportedTypes" Name=".dot" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\WriteCraft\Capabilities\FileAssociations" Name=".dot" Value="WriteCraft.LegacyTemplate" Type="string" />
+
+        <ProgId Id="WriteCraft.RichText" Description="Rich Text Document" Icon="WritecraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\WriteCraft.RichText\shell\open\command" Value="&quot;[#WritecraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.rtf\OpenWithProgids" Name="WriteCraft.RichText" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\writecraft.exe\SupportedTypes" Name=".rtf" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\WriteCraft\Capabilities\FileAssociations" Name=".rtf" Value="WriteCraft.RichText" Type="string" />
+
+        <ProgId Id="WriteCraft.OpenDocumentText" Description="OpenDocument Text" Icon="WritecraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\WriteCraft.OpenDocumentText\shell\open\command" Value="&quot;[#WritecraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.odt\OpenWithProgids" Name="WriteCraft.OpenDocumentText" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\writecraft.exe\SupportedTypes" Name=".odt" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\WriteCraft\Capabilities\FileAssociations" Name=".odt" Value="WriteCraft.OpenDocumentText" Type="string" />
+
+        <ProgId Id="WriteCraft.Markdown" Description="Markdown Document" Icon="WritecraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\WriteCraft.Markdown\shell\open\command" Value="&quot;[#WritecraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.md\OpenWithProgids" Name="WriteCraft.Markdown" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\writecraft.exe\SupportedTypes" Name=".md" Value="" Type="string" />
+
+        <ProgId Id="WriteCraft.PlainText" Description="Text Document" Icon="WritecraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\WriteCraft.PlainText\shell\open\command" Value="&quot;[#WritecraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.txt\OpenWithProgids" Name="WriteCraft.PlainText" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\writecraft.exe\SupportedTypes" Name=".txt" Value="" Type="string" />
+      </Component>
+
+    </ComponentGroup>
+  </Fragment>
+</Wix>

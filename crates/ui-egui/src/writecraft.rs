@@ -85,9 +85,25 @@ pub(crate) fn text(en: &'static str) -> &'static str {
     if crate::i18n::current().code().starts_with("fr") { TEXTS.iter().find(|(e, _)| *e == en).map_or(en, |(_, fr)| *fr) } else { en }
 }
 
-/// A dialog's window title: WriteCraft's About title with the trims on, else the translated one.
+/// The app's name in window titles: WriteCraft with the trims on, else WordCraft.
+pub(crate) fn app_name() -> &'static str {
+    if trimmed() { "WriteCraft" } else { "WordCraft" }
+}
+
+/// A dialog's window title: WriteCraft's About title and name with the trims on, else the
+/// translated one.
 pub(crate) fn dialog_title(title: &'static str) -> &'static str {
-    if trimmed() && title == "About WordCraft" { text("About WriteCraft") } else { tl!(title) }
+    match title {
+        "About WordCraft" if trimmed() => text("About WriteCraft"),
+        "WordCraft" if trimmed() => "WriteCraft",
+        _ => tl!(title),
+    }
+}
+
+/// WriteCraft's version: `WRITECRAFT_VERSION` from the release build (the tag), else the
+/// WordCraft version it is built on.
+pub(crate) fn version() -> &'static str {
+    option_env!("WRITECRAFT_VERSION").filter(|v| !v.is_empty()).unwrap_or(env!("CARGO_PKG_VERSION"))
 }
 
 /// The About tab of the About dialog, for WriteCraft. The Contributors and Models tabs stay
@@ -95,7 +111,7 @@ pub(crate) fn dialog_title(title: &'static str) -> &'static str {
 pub(crate) fn about_ui(ui: &mut egui::Ui) {
     ui.label(egui::RichText::new("WriteCraft").font(crate::theme::semibold(22.0)));
     let build = option_env!("WORDCRAFT_BUILD_SHA").map(|s| s.get(..8).unwrap_or(s)).unwrap_or(tl!("development build"));
-    ui.label(crate::i18n::fmt(tl!("Version {version} ({build})"), &[("version", env!("CARGO_PKG_VERSION")), ("build", build)]));
+    ui.label(crate::i18n::fmt(tl!("Version {version} ({build})"), &[("version", version()), ("build", build)]));
     ui.label(text("A distraction-free word processor for writers, written in Rust."));
     ui.label(text("Based on WordCraft, by the ArtCraft team and the WordCraft contributors."));
     ui.add_space(6.0);
@@ -274,8 +290,12 @@ mod tests {
         assert!(h.query_by_label(tl!("Join us on Discord: discord.gg/artcraft")).is_none());
         assert_eq!(dialog_title("About WordCraft"), "About WriteCraft");
         assert_eq!(dialog_title("Word Count"), tl!("Word Count"));
+        assert_eq!(dialog_title("WordCraft"), "WriteCraft");
+        assert_eq!(app_name(), "WriteCraft");
         set_trimmed(false);
         assert_eq!(dialog_title("About WordCraft"), tl!("About WordCraft"));
+        assert_eq!(dialog_title("WordCraft"), tl!("WordCraft"));
+        assert_eq!(app_name(), "WordCraft");
         // Every WriteCraft text has a French version.
         assert!(TEXTS.iter().all(|(en, fr)| !fr.is_empty() && en != fr));
     }

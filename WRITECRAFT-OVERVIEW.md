@@ -57,6 +57,7 @@ commandes, et sont regroupées dans deux fichiers propres à WriteCraft :
 | Pomodoro (nouvel onglet, avant Aide) | Minuteur : Démarrer / Pause / Reprendre, Réinitialiser (recommencer la période), Passer (période suivante, sans compter le pomodoro), Arrêter (retour au pomodoro 1). Durées : pomodoro, pause courte, pause longue (1 à 180 min), pause longue après N pomodoros (1 à 12). Options : lancer les pauses / les pomodoros automatiquement, prévenir à la fin (l'icône du Dock rebondit et un message s'affiche). Barre d'état, à droite de la langue : « Pomodoro 2 (2/4) · 12:34 / 25:00 », « Pause courte · … », « · En pause » ; un clic démarre ou met en pause. Sons (bloc Sons) : Bips, Rigolos (fanfare, sifflet à coulisse, coucou) ou Aucun, avec un volume et un bouton Écouter ; un son au début d'un pomodoro, au début d'une pause et à la fin d'une période, sauf à la reprise après une pause. Les sons sont synthétisés dans le code (`pomodoro/sound.rs`, lecture avec rodio) : aucun fichier son, donc rien à attribuer. Réglages enregistrés dans `pomodoro.json` (dossier des réglages). Commandes `ui.pomodoro.start/pause/toggle/reset/skip/stop/set/state` pour les scripts et MCP. Code : `crates/ui-egui/src/pomodoro.rs`. |
 | Compteurs d'écriture (barre d'état, après le nombre de mots) | « Aujourd'hui : +N » : mots écrits aujourd'hui, tous documents confondus, en net (les mots supprimés sont retirés). Ouvrir un document ne compte pas : chaque document part de son nombre de mots au moment où il est vu pour la première fois. Enregistré dans `words-today.json`, repart de zéro chaque jour. « Session : +N » : mots écrits pendant le pomodoro en cours (ou le dernier), seulement quand le minuteur tourne en période de travail ; s'affiche dès le premier pomodoro. Commandes `ui.wordTally.state` et `ui.wordTally.resetToday`. Code : `crates/ui-egui/src/word_tally.rs`. |
 | Nouveaux documents | Texte en français (`fr-FR`). Galerie de styles : Normal, Titre 1, Titre, Ellipse. |
+| Identité de l'application | WriteCraft s'installe à côté de WordCraft sans le gêner : nom WriteCraft (barre de titre, fenêtres, boîtes de dialogue), identifiant `io.github.ymauray.writecraft`, icône originale (une plume qui trace une ligne d'encre sur fond terre cuite, `assets/writecraft-icon/`, générée par `packaging/writecraft/icons.sh`), dossier de réglages à part (`~/Library/Application Support/WriteCraft`, `%APPDATA%\WriteCraft`, `~/.config/writecraft`) : préférences, journaux, récupération, Pomodoro, compteurs, clé du canal de contrôle. La version affichée dans À propos vient de `WRITECRAFT_VERSION` (le tag de la release), sinon celle de WordCraft. |
 
 Styles des nouveaux documents (les documents existants gardent les leurs) :
 
@@ -87,6 +88,29 @@ remplace. Elle n'est pas intégrée au dépôt.
   l'interface sans l'audit des traductions
   (`cargo nextest run -p wordcraft-ui-egui -p wordcraft -E 'not test(=i18n::audit::untranslated_interface_text)'`,
   environ 30 s). La suite complète et la référence : `WRITECRAFT-BASELINE.md`.
+
+## Fabriquer les binaires
+
+La CI GitHub les fabrique : `.github/workflows/writecraft-release.yml`.
+
+- **Un tag `vX.Y.Z`** (par exemple `git tag v0.1.0 && git push origin v0.1.0`) construit le DMG
+  macOS (universel : Apple silicon et Intel) et, pour Windows x64, l'installateur MSI et un zip
+  portable, puis les publie dans une release GitHub. Un tag avec un suffixe (`v0.2.0-rc.1`) donne
+  une pré-release.
+- **Un lancement manuel** (onglet Actions, « WriteCraft release », Run workflow) fait la même
+  construction sans publier : les fichiers restent dans les artefacts du lancement.
+- Les scripts sont propres à WriteCraft, dans `packaging/writecraft/` : `macos.sh`,
+  `Info.plist.in`, `windows.ps1`, `writecraft.wxs`, `icons.sh`. Ceux de WordCraft
+  (`packaging/macos`, `packaging/windows`, `release.yml`) restent tels quels pour les fusions.
+- En local sur le Mac (Apple silicon seulement, faute de `rustup`) :
+  `CRAFT_I18N_DIR=/Volumes/EVO_PRO_1T/Development/craft-i18n WRITECRAFT_VERSION=0.1.0 packaging/writecraft/macos.sh --arch aarch64`
+  (environ 3 min 30), résultat dans `dist/release/`.
+- **Pas de signature** : sur un autre Mac, Gatekeeper demande de confirmer (clic droit › Ouvrir) ;
+  sous Windows, SmartScreen aussi (« Informations complémentaires » › « Exécuter quand même »).
+  Signer demanderait un compte Apple Developer et un certificat Windows.
+- Windows : installation pour l'utilisateur seul, sans droits d'administrateur, dans
+  `%LOCALAPPDATA%\Programs\WriteCraft` ; `writecraft.exe`, son propre code de mise à niveau MSI,
+  ses clés de registre (`Software\WriteCraft`) et ses types de fichiers (`WriteCraft.Document`…).
 
 ## Idée 1 : épurer le ruban
 
