@@ -133,7 +133,7 @@ pub fn tick(app: &mut WordApp) {
         return;
     }
     let key = (app.session.document_id(), app.session.path.clone(), app.session.prefs.count_notes);
-    let words = app.cached_word_count();
+    let words = app.cached_status_counts().words;
     let pomodoro = crate::pomodoro::work_session();
     let changed = with(|t| t.observe(key, words, &local_day(), pomodoro));
     let now = crate::clock::now_ms();

@@ -1,6 +1,6 @@
 # WriteCraft — vue d'ensemble
 
-> Rédigé le 2026-10-29, mis à jour le 2026-11-01 (« Ce qui est fait », binaires, page GitHub). WriteCraft est un fork de [WordCraft](https://github.com/storytold/wordcraft)
+> Rédigé le 2026-10-29, mis à jour le 2026-11-20 (fusion de WordCraft `6ef13b2c`). WriteCraft est un fork de [WordCraft](https://github.com/storytold/wordcraft)
 > (`upstream`) hébergé sur [ymauray/writecraft](https://github.com/ymauray/writecraft) (`origin`).
 > Objectif : un traitement de texte épuré, orienté écriture, qui reste synchronisé avec WordCraft.
 
@@ -47,10 +47,10 @@ commandes, et sont regroupées dans deux fichiers propres à WriteCraft :
 | Domaine | Changement |
 |---|---|
 | Mise à jour | Plus de vérification au démarrage ni de bouton « Check for Updates » : le module ne connaît que les versions de WordCraft. |
-| Barre de titre et onglets | Plus de bouton Discord (ni sa case dans Options), plus de bouton Partager. |
+| Barre de titre et onglets | Plus de bouton Discord, plus de bouton Partager. WordCraft a maintenant un réglage pour le bouton Discord (`show_discord`) : WriteCraft le met à faux au démarrage (`apply_app_defaults`) et retire sa case des Options. Le code Discord de WordCraft (`chrome.rs`, `backstage.rs`) reste donc tel quel. |
 | Aide et Fichier | Plus d'entrée Discord (onglet Aide, KeyTip, lien dans Fichier). |
 | Onglets | Seuls restent Fichier, Accueil, Révision, Affichage, Aide. Masqués : Insertion, Dessin, Création, Mise en page, Références, Publipostage, Développeur, Zotero. |
-| Accueil | Presse-papiers ; Police réduite à Gras, Italique, Souligné ; Styles sans bouton de volet ; Modification. Masqués : Paragraphe, Voix, Éditeur. |
+| Accueil | Presse-papiers ; Police réduite à Gras, Italique, Souligné ; Styles sans bouton de volet ; Modification. Masqués : Paragraphe, Outils de paragraphe (arrivé avec WordCraft 0.18), Voix, Éditeur. |
 | Révision | Plus de Grammaire et orthographe, de Thésaurus ni de bloc Langue (Traduire, Langue). |
 | Correcteur | Désactivé au démarrage (les outils de correction n'ont pas le français), même si une préférence enregistrée l'activait. |
 | À propos | Parle de WriteCraft (titre, description, code source de WriteCraft et de WordCraft, licence). Textes en anglais et en français dans `writecraft.rs` (`text`), car craft-i18n n'a pas de lignes WriteCraft. Les onglets Contributeurs et Modèles restent ceux de WordCraft. |
@@ -148,8 +148,22 @@ Les bases sont déjà là :
 On reste synchronisé avec WordCraft : on préfère donc masquer plutôt que supprimer, et isoler les
 ajouts dans des fichiers propres à WriteCraft quand c'est possible.
 
-Dernière synchronisation : **2026-11-01, WordCraft `a88e0052`** (78 commits, fusion `65abb041`,
-sans conflit).
+Dernière synchronisation : **2026-11-20, WordCraft `6ef13b2c`** (version 0.18.1, 1077 commits).
+Conflits dans `apps/wordcraft/src/main.rs`, `app.rs`, `backstage.rs`, `chrome.rs`,
+`dialogs/chrome.rs`, `dialogs/dispatch.rs`, `options.rs`, `ribbon.rs` et `Cargo.lock`. La plupart
+venaient de l'arrivée de la mise en page de droite à gauche (`crate::rtl`), qui a réindenté la barre
+de titre, la barre d'état et le ruban : on a pris la version de WordCraft, puis remis les
+modifications WriteCraft à la main. Autres adaptations : `Arc::make_mut` sur `doc.styles`
+(`engine/src/writecraft.rs`), `cached_status_counts().words` à la place de `cached_word_count`
+(`word_tally.rs`), et le test arabe de `i18n/audit.rs` vise le bouton Modification au lieu de
+Partager.
+
+Arrivé avec cette fusion et laissé tel quel, à trancher : la barre « Les outils de vérification
+pour Français (France) ne sont pas installés. Installer » sous le ruban (paquets de langue,
+`language_packs.rs`). WordCraft propose maintenant un correcteur français à télécharger, alors que
+WriteCraft désactive le correcteur au démarrage.
+
+Fusion précédente : 2026-11-01, WordCraft `a88e0052` (78 commits, fusion `65abb041`, sans conflit).
 
 Le remote `upstream` est en lecture seule (son adresse d'envoi est `DISABLED`). Pour le recréer :
 `git remote add upstream https://github.com/storytold/wordcraft.git && git remote set-url --push upstream DISABLED`.

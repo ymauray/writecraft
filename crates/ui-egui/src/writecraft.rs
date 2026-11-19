@@ -28,6 +28,8 @@ pub fn apply_app_defaults(app: &mut crate::WordApp) {
     app.session.view.proofing = false;
     app.session.prefs.check_spelling = false;
     app.ui.check_spelling = false;
+    // No Discord button in the title bar nor link in File (Options no longer offers it).
+    app.ui.show_discord = false;
 }
 
 /// WriteCraft's own interface text, in English and French: craft-i18n has no WriteCraft rows.
@@ -173,7 +175,7 @@ pub(crate) fn hides_launcher(title: &str) -> bool {
 }
 
 /// The Home groups left off the ribbon. Font stays, with Bold, Italic and Underline only.
-pub const HIDDEN_HOME_GROUPS: [&str; 3] = ["Paragraph", "Voice", "Editor"];
+pub const HIDDEN_HOME_GROUPS: [&str; 4] = ["Paragraph", "Paragraph Tools", "Voice", "Editor"];
 
 /// Whether the Home tab leaves out the group titled `title`.
 pub(crate) fn hides_home_group(title: &str) -> bool {

@@ -22,7 +22,7 @@ const CM: f32 = 72.0 / 2.54;
 
 /// Applies WriteCraft's defaults to a new blank document's styles.
 pub fn apply_defaults(doc: &mut Document) {
-    let styles = &mut doc.styles;
+    let styles = std::sync::Arc::make_mut(&mut doc.styles);
     styles.default_chr.lang = Some(LANGUAGE.into());
     if let Some(normal) = styles.get_mut("Normal") {
         normal.chr.font = Some(FONT.into());
