@@ -31,7 +31,7 @@ commandes, et sont regroupées dans deux fichiers propres à WriteCraft :
 - **`crates/ui-egui/src/writecraft.rs`** : les simplifications de l'interface, derrière un
   interrupteur (`writecraft::set_trimmed(true)`) que l'application de bureau
   (`apps/wordcraft/src/main.rs`) active au démarrage. Il contient les listes d'onglets, de blocs et de commandes masqués, et
-  `apply_app_defaults` (correcteur désactivé).
+  `apply_app_defaults` (pas de bouton Discord).
 - **`crates/engine/src/writecraft.rs`** : les valeurs par défaut des nouveaux documents
   (`apply_defaults`), activées par `Session::writecraft_defaults`, que l'application de bureau active
   aussi.
@@ -51,8 +51,8 @@ commandes, et sont regroupées dans deux fichiers propres à WriteCraft :
 | Aide et Fichier | Plus d'entrée Discord (onglet Aide, KeyTip, lien dans Fichier). |
 | Onglets | Seuls restent Fichier, Accueil, Révision, Affichage, Aide. Masqués : Insertion, Dessin, Création, Mise en page, Références, Publipostage, Développeur, Zotero. |
 | Accueil | Presse-papiers ; Police réduite à Gras, Italique, Souligné ; Styles sans bouton de volet ; Modification. Masqués : Paragraphe, Outils de paragraphe (arrivé avec WordCraft 0.18), Voix, Éditeur. |
-| Révision | Plus de Grammaire et orthographe, de Thésaurus ni de bloc Langue (Traduire, Langue). |
-| Correcteur | Désactivé au démarrage (les outils de correction n'ont pas le français), même si une préférence enregistrée l'activait. |
+| Révision | Plus de Thésaurus (anglais seulement) ni de bloc Langue (Traduire, Langue). Grammaire et orthographe est revenu le 2026-11-20 avec le correcteur français. |
+| Correcteur | Celui de WordCraft, en français grâce au pack de langue `fr` (craft-i18n, MPL-2.0 AND MIT, environ 300 Ko : orthographe et césure). Le pack se télécharge depuis la barre « Les outils de vérification pour Français (France) ne sont pas installés. Installer » sous le ruban, ou depuis Fichier › Options › Langue. Le premier téléchargement demande un clic de la personne : les agents ne peuvent pas l'activer. Jusqu'au 2026-11-20, WriteCraft désactivait le correcteur au démarrage, faute de français. |
 | À propos | Parle de WriteCraft (titre, description, code source de WriteCraft et de WordCraft, licence). Textes en anglais et en français dans `writecraft.rs` (`text`), car craft-i18n n'a pas de lignes WriteCraft. Les onglets Contributeurs et Modèles restent ceux de WordCraft. |
 | Pomodoro (nouvel onglet, avant Aide) | Minuteur : Démarrer / Pause / Reprendre, Réinitialiser (recommencer la période), Passer (période suivante, sans compter le pomodoro), Arrêter (retour au pomodoro 1). Durées : pomodoro, pause courte, pause longue (1 à 180 min), pause longue après N pomodoros (1 à 12). Options : lancer les pauses / les pomodoros automatiquement, prévenir à la fin (l'icône du Dock rebondit et un message s'affiche). Barre d'état, à droite de la langue : « Pomodoro 2 (2/4) · 12:34 / 25:00 », « Pause courte · … », « · En pause » ; un clic démarre ou met en pause. Sons (bloc Sons) : Bips, Rigolos (fanfare, sifflet à coulisse, coucou) ou Aucun, avec un volume et un bouton Écouter ; un son au début d'un pomodoro, au début d'une pause et à la fin d'une période, sauf à la reprise après une pause. Les sons sont synthétisés dans le code (`pomodoro/sound.rs`, lecture avec rodio) : aucun fichier son, donc rien à attribuer. Réglages enregistrés dans `pomodoro.json` (dossier des réglages). Commandes `ui.pomodoro.start/pause/toggle/reset/skip/stop/set/state` pour les scripts et MCP. Code : `crates/ui-egui/src/pomodoro.rs`. |
 | Compteurs d'écriture (barre d'état, après le nombre de mots) | « Aujourd'hui : +N » : mots écrits aujourd'hui, tous documents confondus, en net (les mots supprimés sont retirés). Ouvrir un document ne compte pas : chaque document part de son nombre de mots au moment où il est vu pour la première fois. Enregistré dans `words-today.json`, repart de zéro chaque jour. « Session : +N » : mots écrits pendant le pomodoro en cours (ou le dernier), seulement quand le minuteur tourne en période de travail ; s'affiche dès le premier pomodoro. Commandes `ui.wordTally.state` et `ui.wordTally.resetToday`. Code : `crates/ui-egui/src/word_tally.rs`. |
@@ -158,10 +158,8 @@ modifications WriteCraft à la main. Autres adaptations : `Arc::make_mut` sur `d
 (`word_tally.rs`), et le test arabe de `i18n/audit.rs` vise le bouton Modification au lieu de
 Partager.
 
-Arrivé avec cette fusion et laissé tel quel, à trancher : la barre « Les outils de vérification
-pour Français (France) ne sont pas installés. Installer » sous le ruban (paquets de langue,
-`language_packs.rs`). WordCraft propose maintenant un correcteur français à télécharger, alors que
-WriteCraft désactive le correcteur au démarrage.
+Cette fusion a apporté les packs de langue (`language_packs.rs`), dont un correcteur français.
+WriteCraft ne désactive donc plus le correcteur (voir « Correcteur » plus haut).
 
 Fusion précédente : 2026-11-01, WordCraft `a88e0052` (78 commits, fusion `65abb041`, sans conflit).
 

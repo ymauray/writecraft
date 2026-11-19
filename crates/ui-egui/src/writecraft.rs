@@ -22,12 +22,9 @@ pub fn trimmed() -> bool {
     TRIMMED.with(Cell::get)
 }
 
-/// WriteCraft's app settings, applied after the saved preferences: no spell checking (the
-/// proofing tools have no French).
+/// WriteCraft's app settings, applied after the saved preferences. Spell checking follows the
+/// preference: French comes as a language pack (the bar under the ribbon offers it).
 pub fn apply_app_defaults(app: &mut crate::WordApp) {
-    app.session.view.proofing = false;
-    app.session.prefs.check_spelling = false;
-    app.ui.check_spelling = false;
     // No Discord button in the title bar nor link in File (Options no longer offers it).
     app.ui.show_discord = false;
 }
@@ -151,9 +148,9 @@ pub(crate) fn trim_tabs(tabs: &mut [wordcraft_engine::ribbon::TabEntry]) {
     }
 }
 
-/// Ribbon commands whose buttons and KeyTips are left out: proofing, the English thesaurus and
-/// the language tools (spell checking is off).
-pub const HIDDEN_COMMANDS: [&str; 4] = ["review.spelling", "review.thesaurus", "review.translate", "review.language"];
+/// Ribbon commands whose buttons and KeyTips are left out: the thesaurus (English only) and the
+/// language tools. Spelling & Grammar stays: French spelling comes as a language pack.
+pub const HIDDEN_COMMANDS: [&str; 3] = ["review.thesaurus", "review.translate", "review.language"];
 
 /// The Review groups left off the ribbon.
 pub const HIDDEN_REVIEW_GROUPS: [&str; 1] = ["Language"];
@@ -256,29 +253,31 @@ mod tests {
     }
 
     #[test]
-    fn app_defaults_turn_spell_checking_off() {
+    fn app_defaults_keep_spell_checking_and_hide_discord() {
         let mut app = WordApp::new(Session::new(wordcraft_doc::Document::from_text("Text")), Services::default());
         assert!(app.session.view.proofing, "WordCraft checks spelling");
         apply_app_defaults(&mut app);
-        assert!(!app.session.view.proofing && !app.session.prefs.check_spelling && !app.ui.check_spelling);
+        assert!(app.session.view.proofing && app.session.prefs.check_spelling && app.ui.check_spelling);
+        assert!(!app.ui.show_discord);
     }
 
     #[test]
-    fn no_spelling_button_and_no_styles_launcher() {
+    fn spelling_button_but_no_thesaurus_and_no_styles_launcher() {
         set_trimmed(true);
         let tips: Vec<&str> = crate::keytips::controls_public("Review").into_iter().map(|c| c.tip).collect();
-        for gone in ["Spelling & Grammar", "Thesaurus", "Translate", "Language"] {
+        for gone in ["Thesaurus", "Translate", "Language"] {
             assert!(!tips.contains(&gone), "{gone}: {tips:?}");
         }
-        assert!(tips.contains(&"Read Aloud"), "{tips:?}");
-        assert!(hides_command("review.spelling") && hides_launcher("Styles") && !hides_launcher("Clipboard"));
+        assert!(tips.contains(&"Read Aloud") && tips.contains(&"Spelling & Grammar"), "{tips:?}");
+        assert!(!hides_command("review.spelling") && hides_command("review.thesaurus"));
+        assert!(hides_launcher("Styles") && !hides_launcher("Clipboard"));
         let mut h = home_harness();
         h.state_mut().run("ui.tab", serde_json::json!({"tab": "Review"})).unwrap();
         h.run_steps(4);
         assert!(h.query_by_label(tl!("Thesaurus")).is_none() && h.query_by_label(tl!("Translate")).is_none());
         assert!(h.query_by_label(tl!("Word Count")).is_some(), "the rest of Proofing stays");
         set_trimmed(false);
-        assert!(!hides_command("review.spelling") && !hides_launcher("Styles"));
+        assert!(!hides_command("review.thesaurus") && !hides_launcher("Styles"));
     }
 
     #[test]
