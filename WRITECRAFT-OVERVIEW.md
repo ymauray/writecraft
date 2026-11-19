@@ -225,7 +225,14 @@ vérification wasm ne peut pas tourner sans `rustup` : voir `WRITECRAFT-BASELINE
   Windows ARM64 le sont par GitHub. Les fichiers restent dans `.github/workflows/` pour les fusions.
 - Premier build de test réussi le 2026-11-01 (lancement manuel, version `0.1.0-test`) : DMG
   universel, MSI et zip Windows. Le MSI n'a pas encore été installé sur un vrai Windows.
-- Aucune release publiée : la première viendra d'un tag (`git tag v0.1.0 && git push origin v0.1.0`).
+- Première release : **v0.18.1** (2026-11-20), au commit `891e2759`, avec le même numéro que la
+  version de WordCraft sur laquelle elle repose. Les tags de WriteCraft prennent les mêmes noms
+  que ceux de WordCraft (`v0.18.1`…) : `git config remote.upstream.tagopt --no-tags` empêche donc
+  `git fetch upstream` de rapatrier les tags de WordCraft (le `v0.18.1` local de WordCraft a été
+  remplacé par celui de WriteCraft).
+- Workflows actifs constatés le 2026-11-20 : « WriteCraft release », mais aussi « SonarCloud » et
+  « House rules » (nouveau, arrivé avec la fusion `6ef13b2c`), qui tournent à chaque push sur
+  `main`.
 
 ## Ce qui manque
 
